@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kq.server.mapper.CardMapper">
+  <select id="getCards" resultType="kq.server.bean.Card">
+    select * from cards
+  </select>
+
+  <select id="getUserCards" parameterType="java.lang.Integer" resultType="kq.server.bean.Card">
+    SELECT * from user_card u LEFT JOIN cards c on u.card_id = c.card_id where u.user_id = #{user_id} order by c.rare asc;
+  </select>
+
+  <insert id="userGetCards" parameterType="kq.server.bean.Card">
+    insert into user_card(user_id, card_id) value (#{user_id}, #{card_id})
+  </insert>
+
+  <insert id="insertCard" parameterType="kq.server.bean.Card">
+    insert into cards(card_name,card_description,rare) values (#{card_name}, #{card_description},${rare})
+  </insert>
+</mapper>

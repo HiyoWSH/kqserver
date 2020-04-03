@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kq.server.mapper.UserMapper">
+  <select id="getUsers" resultType="kq.server.bean.User">
+    select * from user
+  </select>
+
+  <select id="getUser" parameterType="java.lang.Integer" resultType="kq.server.bean.User">
+    select * from user where user_id = #{user_id}
+  </select>
+
+  <insert id="insertUser" parameterType="kq.server.bean.User">
+    insert into user(user_id, last_get_card, last_get_qian, last_qian) values (#{user_id},#{last_get_card},#{last_get_qian},#{last_qian})
+  </insert>
+
+  <update id="updateUser" parameterType="kq.server.bean.User">
+    update user set last_get_card = #{last_get_card}, card_left = #{card_left},
+    last_get_qian = #{last_get_qian}, last_qian = #{last_qian},
+    achievements = #{achievements}
+    where user_id = #{user_id}
+  </update>
+</mapper>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kq.server.mapper.AchievementMapper">
+  <select id="getAchievements" resultType="kq.server.bean.Achievement">
+    select * from achievement
+  </select>
+
+  <select id="getAchievementById" parameterType="java.lang.Integer" resultType="kq.server.bean.Achievement">
+    SELECT * from achievement where id = #{id};
+  </select>
+
+  <insert id="insertAchievement" parameterType="kq.server.bean.Achievement">
+    insert into achievement(achievementName,needed,description) values (#{achievementName}, #{needed}, #{description})
+  </insert>
+</mapper>
