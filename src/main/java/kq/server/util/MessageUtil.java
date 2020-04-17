@@ -7,8 +7,6 @@ import kq.server.enums.MessageTypeEnum;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import java.util.Random;
-
 public class MessageUtil {
 
     public static Logger logger = Logger.getLogger(MessageUtil.class);
@@ -50,6 +48,18 @@ public class MessageUtil {
         message.put("data", msgdata);
 
         json.getJSONArray("message").add(message);
+        return json;
+    }
+
+    public static JSONObject addJsonMessageWithEnterFirst(JSONObject json, String msg){
+        JSONObject msgdata = new JSONObject();
+        msgdata.put("text", "\n" + msg);
+
+        JSONObject message = new JSONObject();
+        message.put("type", "text");
+        message.put("data", msgdata);
+
+        json.getJSONArray("message").add(0, message);
         return json;
     }
 

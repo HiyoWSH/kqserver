@@ -5,13 +5,12 @@ import kq.server.bean.Achievement;
 import kq.server.bean.Message;
 import kq.server.mapper.AchievementMapper;
 import kq.server.mapper.BlogMapper;
-import kq.server.service.AchievementService;
-import kq.server.service.CardService;
-import kq.server.service.ChouqianService;
-import kq.server.service.MessageHandlerService;
+import kq.server.service.*;
 import kq.server.threads.AchievementSender;
 import kq.server.threads.MessageHandler;
 import kq.server.threads.MessageSender;
+import kq.server.util.CardShop;
+import kq.server.util.RandomUtil;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -30,11 +29,9 @@ public class KqServerController {
     @Autowired
     private AchievementMapper achievementMapper;
     @Autowired
+    private StoryService storyService;
+    @Autowired
     private CardService cardService;
-    @Autowired
-    private ChouqianService chouqianService;
-    @Autowired
-    private AchievementService achievementService;
     //会有错误提示但可以运行
 
     @ResponseBody
@@ -64,9 +61,12 @@ public class KqServerController {
 
     @PostConstruct
     public void init(){
-        new MessageHandler(cardService, chouqianService, achievementService).start();
+        new MessageHandler(messageHandlerService).start();
         new MessageSender().start();
         new AchievementSender().start();
         Achievement.achievementList = achievementMapper.getAchievements();
+        new RandomUtil().start();
+        storyService.initStoryCache();
+        CardShop.setShopCards(cardService.createShopCards());
     }
 }

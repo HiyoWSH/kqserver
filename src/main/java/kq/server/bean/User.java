@@ -13,6 +13,8 @@ public class User {
     List<Card> cards;
     String last_qian;
     String achievements;
+    String status;
+    int coins;
 
     public int getUser_id() {
         return user_id;
@@ -86,5 +88,21 @@ public class User {
             return new String[]{};
         }
         return achievements.split(",");
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public int getCoins() {
+        return coins;
+    }
+
+    public void setCoins(int coins) {
+        this.coins = coins;
     }
 }

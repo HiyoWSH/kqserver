@@ -1,7 +1,9 @@
 package kq.server.controller;
 
+import kq.server.bean.Achievement;
 import kq.server.bean.Card;
 import kq.server.bean.User;
+import kq.server.mapper.AchievementMapper;
 import kq.server.mapper.CardMapper;
 import kq.server.mapper.UserMapper;
 import kq.server.util.FileOperate;
@@ -25,6 +27,8 @@ public class JdbcTestController {
     private UserMapper userMapper;
     @Autowired
     private CardMapper cardMapper;
+    @Autowired
+    private AchievementMapper achievementMapper;
 
 //    @PostConstruct
     public void test(){
@@ -43,7 +47,7 @@ public class JdbcTestController {
     @GetMapping("/addCardFromFile")
     public String addCardFromFile(){
         String filePath = "D:\\card\\cards.txt";
-        List<String> cardsStr = FileOperate.FileRead(filePath,"utf-8");
+        List<String> cardsStr = FileOperate.readFileToStringList(filePath, "utf-8");
         for(String srt:cardsStr){
             String[] value = srt.split("@@@");
             if(value.length == 3){
@@ -62,8 +66,24 @@ public class JdbcTestController {
     @GetMapping("/printCardFromDb")
     public String printCardFromDb(){
         for(Card c:cardMapper.getCards()){
-            System.out.printf("%s@@@%s@@@%S\n", c.getCard_name(), c.getCard_description(), c.getRare());
+            System.out.printf("%s@@@%s@@@%s\n", c.getCard_name(), c.getCard_description(), c.getRare());
         }
+        return "ok";
+    }
+
+    @ResponseBody
+    @GetMapping("/printAchievementFromDb")
+    public String printAchievementFromDb(){
+        for(Achievement achievement:Achievement.achievementList){
+            System.out.printf("%s@@@%s@@@%s@@@%d\n", achievement.getAchievement_name(), achievement.getNeeded(), achievement.getDescription(),achievement.getNeed_count());
+        }
+        return "ok";
+    }
+
+    @ResponseBody
+    @GetMapping("/reloadAchievement")
+    public String reloadAchievement(){
+        Achievement.achievementList = achievementMapper.getAchievements();
         return "ok";
     }
 }

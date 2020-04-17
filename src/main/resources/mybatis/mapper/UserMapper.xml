@@ -18,7 +18,7 @@
   <update id="updateUser" parameterType="kq.server.bean.User">
     update user set last_get_card = #{last_get_card}, card_left = #{card_left},
     last_get_qian = #{last_get_qian}, last_qian = #{last_qian},
-    achievements = #{achievements}
+    achievements = #{achievements}, coins = #{coins}
     where user_id = #{user_id}
   </update>
 </mapper>

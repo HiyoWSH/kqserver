@@ -2,6 +2,7 @@ package kq.server.bean;
 
 import com.alibaba.fastjson.JSONObject;
 import kq.server.enums.MessageTypeEnum;
+import kq.server.util.MessageUtil;
 
 public class Message {
 
@@ -105,6 +106,18 @@ public class Message {
         this.resbody = resbody;
     }
 
+    public void addJsonRes(String res){
+        MessageUtil.addJsonMessage(resbody, res);
+    }
+
+    public void addJsonResWithEnter(String res){
+        MessageUtil.addJsonMessageWithEnter(resbody, res);
+    }
+
+    public void addJsonResWithEnterFirst(String res){
+        MessageUtil.addJsonMessageWithEnterFirst(resbody, res);
+    }
+
     public boolean needDeal() {
         switch (post_type){
             case "message":break;
@@ -130,7 +143,7 @@ public class Message {
     }
 
     public String getCommand() {
-        return this.raw_message.replaceAll(MYINFOCONTEXT, "");
+        return this.raw_message.replaceAll(MYINFOCONTEXT, "").trim();
     }
 
     public static void main(String[] arg){
