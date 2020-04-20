@@ -17,6 +17,8 @@ public class DealRegexLib {
         put("歪比.*", "歪比歪比", "歪比巴卜");
         put("贴贴.*", "贴贴~", "蹭蹭~");
         put("抱抱.*", "抱抱", "抱~");
+        put("rua.*", "rua!", "rua");
+        put("RUA.*", "rua!", "rua");
     }
 
     public static String getRes(String input) {

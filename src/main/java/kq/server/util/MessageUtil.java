@@ -71,11 +71,34 @@ public class MessageUtil {
         }
     }
 
-    public static JSONObject getResBaseGroup(Message message) {
+    public static JSONObject getResBaseNoAt(Message message) {
+        if(MessageTypeEnum.GROUP == message.getMessage_type()){
+            return getResBaseGroupNoAt(message);
+        } else {
+            return getResBasePrivate(message);
+        }
+    }
+
+    private static JSONObject getResBaseGroupNoAt(Message message) {
         JSONObject resjson = new JSONObject();
         resjson.put("group_id",message.getGroup_id());
         resjson.put("message", new JSONArray());
+        return resjson;
+    }
+
+    public static JSONObject getResBaseGroup(Message message) {
+        JSONObject resjson = getResBaseGroupNoAt(message);
         addAt(resjson, message.getUser_id());
+        return resjson;
+    }
+
+    public static JSONObject getResBaseGroup(Message... messages) {
+        JSONObject resjson = new JSONObject();
+        resjson.put("group_id",messages[0].getGroup_id());
+        resjson.put("message", new JSONArray());
+        for (Message m:messages) {
+            addAt(resjson, m.getUser_id());
+        }
         return resjson;
     }
 

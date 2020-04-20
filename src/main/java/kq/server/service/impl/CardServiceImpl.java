@@ -35,6 +35,12 @@ public class CardServiceImpl implements CardService {
     @Autowired
     UserService userService;
 
+    /**
+     * 抽卡 count 次
+     * @param message
+     * @param count
+     * @return
+     */
     @Override
     public JSONObject doGetCard(Message message, int count) {
         User user = userMapper.getUser(message.getUser_id());
@@ -58,11 +64,17 @@ public class CardServiceImpl implements CardService {
         int getCoins = saveUserCard(user, getResCard, message, count);
         if(getCoins > 0){
             addJsonMessageWithEnter(resjson, "抽到的重复卡牌转换为硬币" + getCoins + "枚");
+            addJsonMessageWithEnter(resjson, "当前拥有硬币 " + userMapper.getUser(message.getUser_id()).getCoins() +  "枚");
         }
         addJsonMessageWithEnter(resjson, "输入“查看卡牌”查看已抽取到的卡牌");
         return resjson;
     }
 
+    /**
+     * 查看卡牌
+     * @param message
+     * @return
+     */
     @Override
     public JSONObject doShowCard(Message message){
         String command = message.getCommand();
@@ -116,6 +128,11 @@ public class CardServiceImpl implements CardService {
         return doGetCard(message, count);
     }
 
+    /**
+     * 卡牌商店
+     * @param message
+     * @return
+     */
     @Override
     public JSONObject doShowCardShop(Message message) {
         JSONObject resjson = getResBase(message);
@@ -136,6 +153,11 @@ public class CardServiceImpl implements CardService {
         return resjson;
     }
 
+    /**
+     * 交换卡牌
+     * @param message
+     * @return
+     */
     @Override
     public JSONObject doCardExchange(Message message) {
         JSONObject resjson = getResBase(message);
@@ -174,6 +196,10 @@ public class CardServiceImpl implements CardService {
         return resjson;
     }
 
+    /**
+     * 卡牌商店随机生成物品
+     * @return
+     */
     @Override
     public List<Card> createShopCards() {
         int ssrCount = 3;
@@ -213,7 +239,7 @@ public class CardServiceImpl implements CardService {
     }
 
     /**
-     *
+     * 抽卡
      * @param cardres  抽卡保存列表
      * @param resjson  抽卡返回信息
      * @param count    抽卡次数

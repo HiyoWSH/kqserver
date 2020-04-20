@@ -1,5 +1,6 @@
 package kq.server.threads;
 
+import com.alibaba.fastjson.JSONObject;
 import kq.server.bean.Message;
 import kq.server.enums.MessageTypeEnum;
 import kq.server.service.MessageHandlerService;
@@ -28,6 +29,13 @@ public class MessageSender extends Thread {
     }
 
     public static void sendMessage(Message message){
+        messageList.add(message);
+    }
+
+    public static void sendMessage(JSONObject resjson, MessageTypeEnum type){
+        Message message = new Message();
+        message.setResbody(resjson);
+        message.setMessage_type(type);
         messageList.add(message);
     }
 

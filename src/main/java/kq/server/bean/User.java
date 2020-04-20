@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 public class User {
+    String name;
     int user_id;
     int card_left = 10;
     Date last_get_card;
@@ -104,5 +105,13 @@ public class User {
 
     public void setCoins(int coins) {
         this.coins = coins;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
