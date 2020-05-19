@@ -8,4 +8,5 @@ public interface UserService {
 
     boolean getCoins(User user, int count);
     boolean getCoins(int user_id, int count);
+    String showUserInfo(User user);
 }

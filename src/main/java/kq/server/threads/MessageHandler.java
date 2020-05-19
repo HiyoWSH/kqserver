@@ -8,8 +8,11 @@ import java.util.LinkedList;
 
 public class MessageHandler extends Thread {
 
-    MessageHandlerService messageHandlerService;
     private static Logger logger = Logger.getLogger(MessageHandler.class);
+    // 正在处理的消息
+    private static Message doingMessage;
+
+    MessageHandlerService messageHandlerService;
     static LinkedList<Message> messageList = new LinkedList<Message>();
 
     public MessageHandler(MessageHandlerService messageHandlerService) {
@@ -20,6 +23,10 @@ public class MessageHandler extends Thread {
         messageList.add(message);
     }
 
+    public static Message getDoingMessage(){
+        return doingMessage;
+    }
+
     @Override
     public void run(){
         while (true){
@@ -27,7 +34,9 @@ public class MessageHandler extends Thread {
                 if (messageList.size() > 0) {
                     Message message = messageList.pop();
                     if (message.needDeal()) {
+                        doingMessage = message;
                         messageHandlerService.doDeal(message);
+                        doingMessage = null;
                     }
                 }
 

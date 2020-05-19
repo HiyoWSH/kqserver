@@ -11,6 +11,7 @@ public class Achievement {
     private String needed;
     private String description;
     int need_count;
+    private String imagepath;
 
     public Achievement() {
     }
@@ -57,5 +58,13 @@ public class Achievement {
 
     public void setNeed_count(int need_count) {
         this.need_count = need_count;
+    }
+
+    public String getImagepath() {
+        return imagepath;
+    }
+
+    public void setImagepath(String imagepath) {
+        this.imagepath = imagepath;
     }
 }

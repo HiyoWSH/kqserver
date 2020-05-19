@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import kq.server.bean.Message;
 import kq.server.enums.MessageTypeEnum;
 import kq.server.service.MessageHandlerService;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -45,7 +46,9 @@ public class MessageSender extends Thread {
             try {
                 if (messageList.size() > 0) {
                     Message message = messageList.pop();
-                    if(MessageTypeEnum.PRIVATE == message.getMessage_type()){
+                    if(StringUtils.isNotBlank(message.getTargetUrl())){
+                        post(message.getTargetUrl(), createHttpEntity(message.getResbody()));
+                    } else if(MessageTypeEnum.PRIVATE == message.getMessage_type()){
                         post(privateurl, createHttpEntity(message.getResbody()));
                     } else if(MessageTypeEnum.GROUP == message.getMessage_type()) {
                         post(groupurl, createHttpEntity(message.getResbody()));

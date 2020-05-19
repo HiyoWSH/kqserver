@@ -3,6 +3,7 @@ package kq.server.gm.trpg;
 import kq.server.bean.Message;
 import kq.server.bean.User;
 import kq.server.util.RandomUtil;
+import org.apache.commons.lang.StringUtils;
 
 import javax.validation.constraints.Max;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public abstract class TrpgMode {
         this.startTime = startTime;
     }
 
-    public abstract boolean end();
+    public abstract boolean isEnd();
 
     public abstract void nextStap();
 
@@ -49,5 +50,14 @@ public abstract class TrpgMode {
     public int getTrpgJudge(){
         int point = RandomUtil.getNextInt(100) + 1;
         return point;
+    }
+
+    User getUser(int uid){
+        for(User user:users){
+            if(uid == user.getUser_id()){
+                return user;
+            }
+        }
+        return null;
     }
 }

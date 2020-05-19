@@ -24,10 +24,10 @@ public class StoryServiceImpl implements StoryService {
     private UserService userService;
 
     @Override
-    public JSONObject doDealStory(Message message) {
+    public String doDealStory(String command) {
+        StringBuilder resbuilder = new StringBuilder();
         try {
-            String param = message.getCommand().replaceAll(".故事", "").trim();
-            JSONObject resjson = getResBase(message);
+            String param = command.replaceAll(".故事", "").trim();
             String targetBook = "";
             int index = 0;
 
@@ -56,12 +56,6 @@ public class StoryServiceImpl implements StoryService {
             }
 
             if (StringUtils.isNotBlank(targetBook)) {
-                if(userService.costCoins(message.getUser_id(), 1)){
-                    addJsonMessageWithEnter(resjson, "让栗小栗给你讲个有趣的故事吧~ (消耗硬币1)");
-                } else {
-                    addJsonMessageWithEnter(resjson, "欸欸欸，栗小栗才不想给你讲故事呢(硬币不足1)");
-                    return resjson;
-                }
 
                 List<String> values = FileOperate.readFileToStringList(targetBook, "gb2312");
                 int startIndex = index;
@@ -73,20 +67,19 @@ public class StoryServiceImpl implements StoryService {
                 for (int i = startIndex; i < endIndex || i < values.size() - 1; i++) {
                     builder.append(values.get(i));
                 }
-                resjson = addJsonMessageWithEnter(resjson, new File(targetBook).getName().replaceAll(".txt", ""));
-                resjson = addJsonMessageWithEnter(resjson, builder.substring(0, Math.min(990, builder.length())).toString() + "...");
+                resbuilder.append("\n").append(new File(targetBook).getName().replaceAll(".txt", ""));
+                resbuilder.append("\n").append(builder.substring(0, Math.min(990, builder.length())).toString() + "...");
 
                 logger.info("Get story : " + targetBook + " start index " + startIndex);
             } else {
-                resjson = addJsonMessage(resjson, "栗小栗好像忘了怎么讲故事了呢，诶嘿~");
+                resbuilder.append("\n").append("栗小栗好像忘了怎么讲故事了呢，诶嘿~");
             }
 
-            return resjson;
+            return resbuilder.toString();
         } catch (Exception e) {
-            e.printStackTrace();
-            JSONObject resjson = getResBase(message);
-            addJsonMessage(resjson, "栗小栗好像忘了怎么讲故事了呢，诶嘿~");
-            return resjson;
+            logger.error(e);
+            resbuilder.append("\n").append("栗小栗好像忘了怎么讲故事了呢，诶嘿~");
+            return resbuilder.toString();
         }
     }
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kq.server.mapper.ImageIdMapper">
+
+    <select id="getImageIdByPass" parameterType="java.lang.String" resultType="kq.server.bean.ImageId">
+        select * from imageid where path = #{path}
+    </select>
+
+    <insert id="insertImageId" parameterType="kq.server.bean.ImageId">
+        insert into imageid(path,imageid) values (#{path}, #{imageid})
+    </insert>
+</mapper>

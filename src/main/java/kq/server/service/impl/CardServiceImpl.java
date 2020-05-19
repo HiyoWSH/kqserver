@@ -8,8 +8,10 @@ import kq.server.bean.User;
 import kq.server.mapper.CardMapper;
 import kq.server.mapper.UserMapper;
 import kq.server.service.CardService;
+import kq.server.service.MiraiMessageSenderService;
 import kq.server.service.UserService;
 import kq.server.threads.AchievementSender;
+import kq.server.threads.MiraiSender;
 import kq.server.util.CardShop;
 import kq.server.util.MessageUtil;
 import org.apache.commons.lang.StringUtils;
@@ -34,138 +36,125 @@ public class CardServiceImpl implements CardService {
     CardMapper cardMapper;
     @Autowired
     UserService userService;
+    @Autowired
+    MiraiMessageSenderService miraiMessageSenderService;
 
     /**
      * 抽卡 count 次
-     * @param message
      * @param count
      * @return
      */
     @Override
-    public JSONObject doGetCard(Message message, int count) {
-        User user = userMapper.getUser(message.getUser_id());
-        if(user == null){
-            user = new User();
-            user.setUser_id(message.getUser_id());
-            userMapper.insertUser(user);
-        }
+    public String doGetCard(User user, int count) {
+        StringBuilder stringBuilderRes = new StringBuilder();
         //超过
         if(user.getLast_get_card() == null || getTodayStartTime() - user.getLast_get_card().getTime() > 0){
             user.setCard_left(10);
         }
-        JSONObject resjson = MessageUtil.getResBase(message);
         if(user.getCard_left() < count){
-            addJsonMessage(resjson, "\n今天的剩余抽卡次数是" + user.getCard_left() + "次哦，请不要太贪心");
-            return resjson;
+            return String.format("今天的剩余抽卡次数是%d次哦，请不要太贪心", user.getCard_left());
         }
 
         List<Card> getResCard = new ArrayList<>();
-        doChouka(getResCard, resjson, count);
-        int getCoins = saveUserCard(user, getResCard, message, count);
+        stringBuilderRes.append(doChouka(getResCard, count));
+        int getCoins = saveUserCard(user, getResCard, count);
         if(getCoins > 0){
-            addJsonMessageWithEnter(resjson, "抽到的重复卡牌转换为硬币" + getCoins + "枚");
-            addJsonMessageWithEnter(resjson, "当前拥有硬币 " + userMapper.getUser(message.getUser_id()).getCoins() +  "枚");
+            stringBuilderRes.append("\n").append(String.format("抽到的重复卡牌转换为硬币 %d枚", getCoins));
+            stringBuilderRes.append("\n").append(String.format("当前拥有硬币 %d枚", userMapper.getUser(user.getUser_id()).getCoins()));
         }
-        addJsonMessageWithEnter(resjson, "输入“查看卡牌”查看已抽取到的卡牌");
-        return resjson;
+        stringBuilderRes.append("\n").append("输入“查看卡牌”查看已抽取到的卡牌");
+        return stringBuilderRes.toString();
     }
 
     /**
      * 查看卡牌
-     * @param message
      * @return
      */
     @Override
-    public JSONObject doShowCard(Message message){
-        String command = message.getCommand();
+    public String doShowCard(User user, String command){
+        StringBuilder stringBuilderRes = new StringBuilder();
         try{
             String cardName = command.split("查看卡.")[1].trim();
             if(!"".equals(cardName)){
                 List<Card> cards = cardMapper.getCards();
-                JSONObject resjson = MessageUtil.getResBase(message);
                 for(Card c:cards){
                     if(cardName.equals(c.getCard_name())){
-                        MessageUtil.addJsonMessageWithEnter(resjson, "卡牌名称：" + cardName);
-                        MessageUtil.addJsonMessageWithEnter(resjson, "稀有度：" + c.getRare());
-                        MessageUtil.addJsonMessageWithEnter(resjson, JSONObject.parseObject(c.getCard_description()).getString("description"));
-                        return resjson;
+                        stringBuilderRes.append("\n").append("卡牌名称：" + cardName);
+                        stringBuilderRes.append("\n").append("稀有度：" + c.getRare());
+                        stringBuilderRes.append("\n").append(JSONObject.parseObject(c.getCard_description()).getString("description"));
+                        if(c.getImagepath() != null){
+                            miraiMessageSenderService.sendImageWait(c.getImagepath());
+                        }
+                        return stringBuilderRes.toString();
                     }
                 }
-                MessageUtil.addJsonMessageWithEnter(resjson, "未找到卡牌 " + cardName);
-                return resjson;
+                stringBuilderRes.append("\n").append("未找到卡牌 " + cardName);
+                return stringBuilderRes.toString();
             }
         }catch (Exception e){
             System.out.println("未输入卡牌名称");
         }
 
-        int user_id = message.getUser_id();
-        JSONObject resjson = MessageUtil.getResBase(message);
+        int user_id = user.getUser_id();
         List<Card> userCards = cardMapper.getUserCards(user_id);
         if(userCards.size() == 0){
-            MessageUtil.addJsonMessageWithEnter(resjson, "你还没有获得认可卡牌呢，输入抽卡抽取");
-            return resjson;
+            stringBuilderRes.append("\n").append("你还没有获得任何卡牌呢，输入抽卡抽取");
+            return stringBuilderRes.toString();
         }
-        MessageUtil.addJsonMessageWithEnter(resjson, "你拥有的卡牌如下：");
+        stringBuilderRes.append("\n").append("你拥有的卡牌如下：");
         for(Card c:userCards){
-            MessageUtil.addJsonMessageWithEnter(resjson, c.getCard_name() + "(" + c.getRare() + ")");
+            stringBuilderRes.append("\n").append(String.format("%s(%s)", c.getCard_name(), c.getRare()));
         }
-        MessageUtil.addJsonMessageWithEnter(resjson, "输入“查看卡牌 卡牌名称” 查看卡牌详细信息");
-        return resjson;
+        stringBuilderRes.append("\n").append("输入查看卡牌 [卡牌名称] 查看卡牌详细信息");
+        return stringBuilderRes.toString();
     }
 
     /**
      * 抽卡命令入口
-     * @param message
      * @return
      */
     @Override
-    public JSONObject doDealChouka(Message message){
+    public String doDealChouka(User user, String command){
         int count = 1;
         try{
-            System.out.println("command " + message.getCommand());
-            count = Integer.parseInt(message.getCommand().replaceAll("[^0-9]",""));
+            System.out.println("command " + command);
+            count = Integer.parseInt(command.replaceAll("[^0-9]",""));
         } catch (Exception e){e.printStackTrace();}
-        return doGetCard(message, count);
+        return doGetCard(user, count);
     }
 
     /**
      * 卡牌商店
-     * @param message
      * @return
      */
     @Override
-    public JSONObject doShowCardShop(Message message) {
-        JSONObject resjson = getResBase(message);
-        addJsonMessageWithEnter(resjson, "今日可交换卡牌");
+    public String doShowCardShop(User user) {
+        StringBuilder stringBuilderRes = new StringBuilder();
+        stringBuilderRes.append("\n").append("今日可交换卡牌");
         List<Card> shopCards = CardShop.getShopCards();
         int index = 1;
         for (Card c:shopCards){
-            addJsonMessageWithEnter(resjson,
-                    index + "." + c.getCard_name() + " (" + c.getRare() + ")......" +
-                            (140-20*index) + "硬币");
+
+            stringBuilderRes.append("\n").append(String.format("%d.%s (%s)......%d硬币", index, c.getCard_name(), c.getRare(), (140-20*index)));
             index++;
         }
-        addJsonMessageWithEnter(resjson,
-                index + ".十连扭蛋券......20硬币");
-        addJsonMessageWithEnter(resjson, "");
-        addJsonMessageWithEnter(resjson, "您当前拥有硬币 " + userMapper.getUser(message.getUser_id()).getCoins() +  "枚");
-        addJsonMessageWithEnter(resjson, "输入'交换卡牌 [卡牌名称]'可交换卡牌");
-        return resjson;
+        stringBuilderRes.append("\n").append(index + ".十连扭蛋券......20硬币");
+        stringBuilderRes.append("\n");
+        stringBuilderRes.append("\n").append("您当前拥有硬币 " + userMapper.getUser(user.getUser_id()).getCoins() +  "枚");
+        stringBuilderRes.append("\n").append("输入'交换卡牌 [卡牌名称]'可交换卡牌");
+        return stringBuilderRes.toString();
     }
 
     /**
      * 交换卡牌
-     * @param message
      * @return
      */
     @Override
-    public JSONObject doCardExchange(Message message) {
-        JSONObject resjson = getResBase(message);
+    public String doCardExchange(User user, String command) {
+        StringBuilder stringBuilderRes = new StringBuilder();
         try {
-            String exchangeTarget = message.getCommand().replaceAll("交换卡牌", "").trim();
+            String exchangeTarget = command.replaceAll("交换卡牌", "").trim();
             if(StringUtils.equals("十连扭蛋券", exchangeTarget)){
-                User user = userMapper.getUser(message.getUser_id());
-
                 if(userService.costCoins(user, 20)) {
                     //超过
                     if (user.getLast_get_card() == null || getTodayStartTime() - user.getLast_get_card().getTime() > 0) {
@@ -174,11 +163,11 @@ public class CardServiceImpl implements CardService {
                     user.setCard_left(user.getCard_left() + 10);
                     user.setLast_get_card(new Date());
                     userMapper.updateUser(user);
-                    addJsonMessageWithEnter(resjson, "交换成功，获得抽卡次数10次，当日有效(剩余抽卡次数" + user.getCard_left() + ")");
-                    return resjson;
+                    stringBuilderRes.append("\n").append("交换成功，获得抽卡次数10次，当日有效(剩余抽卡次数" + user.getCard_left() + ")");
+                    return stringBuilderRes.toString();
                 } else {
-                    addJsonMessageWithEnter(resjson, "交换失败，硬币不足20");
-                    return resjson;
+                    stringBuilderRes.append("\n").append("交换失败，硬币不足20");
+                    return stringBuilderRes.toString();
                 }
             }
 
@@ -186,14 +175,14 @@ public class CardServiceImpl implements CardService {
             int index = 1;
             for (Card c:shopCards){
                 if(StringUtils.equals(c.getCard_name(), exchangeTarget)){
-                    return exchangeCard(resjson, message, c, 140-20*index);
+                    return exchangeCard(user, c, 140-20*index);
                 }
                 index++;
             }
         } catch (Exception e){
-            addJsonMessageWithEnter(resjson, "交换失败");
+            stringBuilderRes.append("\n").append("交换失败");
         }
-        return resjson;
+        return stringBuilderRes.toString();
     }
 
     /**
@@ -241,11 +230,12 @@ public class CardServiceImpl implements CardService {
     /**
      * 抽卡
      * @param cardres  抽卡保存列表
-     * @param resjson  抽卡返回信息
+     * @return  resjson  抽卡返回信息
      * @param count    抽卡次数
      */
-    private void doChouka(List cardres, JSONObject resjson, int count){
-        addJsonMessageWithEnter(resjson, "抽卡结果：");
+    private String doChouka(List cardres, int count){
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("抽卡结果：");
         List<Card> allCards = cardMapper.getCards();
         List<Card> cards;
         Random random = getRandom();
@@ -271,23 +261,23 @@ public class CardServiceImpl implements CardService {
                 int r2 = random.nextInt(cards.size());
                 logger.info("[Chouka random2] = " + r2);
                 Card getC = cards.get(r2);
-                addJsonMessageWithEnter(resjson, (i+1) + "." + getC.getCard_name()+ "(" + getC.getRare() + ")");
+                stringBuilder.append("\n").append(String.format("%d.%s(%s)", i+1, getC.getCard_name(), getC.getRare()));
                 cardres.add(getC);
             } else {
-                addJsonMessageWithEnter(resjson, (i+1) + ". 什么都没有抽到");
+                stringBuilder.append("\n").append(String.format("%d. 什么都没有抽到", i+1));
             }
         }
+        return stringBuilder.toString();
     }
 
     /**
      * 储存用户抽到的卡牌信息
      * @param user 用户
      * @param cards 抽到的卡
-     * @param message 消息，传递用
      * @param count 抽卡数量
      * @return 获得的硬币数
      */
-    private int saveUserCard(User user, List<Card> cards, Message message, int count){
+    private int saveUserCard(User user, List<Card> cards, int count){
         int userId = user.getUser_id();
         List<Card> userCards = cardMapper.getUserCards(userId);
         int getCoins = 0;
@@ -324,7 +314,6 @@ public class CardServiceImpl implements CardService {
         if (getCoins > 0) {
             user.setCoins(user.getCoins() + getCoins);
         }
-        checkAchievement(user, message);
         userMapper.updateUser(user);
         return getCoins;
     }
@@ -333,7 +322,8 @@ public class CardServiceImpl implements CardService {
      * 检查是否满足新的成就
      * @param user
      */
-    private void checkAchievement(User user, Message message) {
+    @Override
+    public void checkAchievement(User user, Message message) {
         List<Card> userCards = cardMapper.getUserCards(user.getUser_id());
         for(Achievement achievement:Achievement.achievementList){
             if(!user.hasAchievement(achievement)) {
@@ -350,39 +340,39 @@ public class CardServiceImpl implements CardService {
                 if (get >= needed.length || (achievement.getNeed_count() > 0 && get >= achievement.getNeed_count())) {
                     user.addAchievement(achievement);
                     AchievementSender.sendAchievement(achievement, message);
+                    if(achievement.getImagepath() != null) {
+                        miraiMessageSenderService.sendImageWait(achievement.getImagepath());
+                    }
                 }
             }
         }
+        userMapper.updateUser(user);
     }
 
     /**
      * 交换卡牌
-     * @param resjson
-     * @param message
      * @param c
      * @param price
      * @return
      */
-    private JSONObject exchangeCard(JSONObject resjson, Message message, Card c, int price) {
-        User user = userMapper.getUser(message.getUser_id());
+    private String exchangeCard(User user, Card c, int price) {
+        StringBuilder stringBuilderRes = new StringBuilder();
         try {
             if(hasCard(user, c)){
-                addJsonMessage(resjson, "交换失败，您已拥有卡牌 " + c.getCard_name());
-                return resjson;
+                return stringBuilderRes.append("交换失败，您已拥有卡牌 " + c.getCard_name()).toString();
             }
             if(price > user.getCoins()){
-                addJsonMessage(resjson, "交换失败，硬币不足 " + price);
-                return resjson;
+                return stringBuilderRes.append("交换失败，硬币不足 " + price).toString();
             }
             List tmplist = new ArrayList();
             tmplist.add(c);
             user.setCoins(user.getCoins() - price);
-            saveUserCard(user, tmplist, message, 0);
-            addJsonMessage(resjson, "获得卡牌 " + c.getCard_name());
+            saveUserCard(user, tmplist, 0);
+            stringBuilderRes.append("获得卡牌 " + c.getCard_name()).toString();
         } catch (Exception e){
-            addJsonMessage(resjson, "您当前无法交换卡牌");
+            stringBuilderRes.append("您当前无法交换卡牌").toString();
         }
-        return resjson;
+        return stringBuilderRes.toString();
     }
 
     // 用户是否拥有卡牌c

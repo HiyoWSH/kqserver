@@ -3,8 +3,9 @@ package kq.server.threads;
 import com.alibaba.fastjson.JSONObject;
 import kq.server.bean.Message;
 import kq.server.bean.User;
-import kq.server.gm.trpg.HatuneRoomMode;
-import kq.server.gm.trpg.TrpgMode;
+import kq.server.gm.trpgmode.TrpgUser;
+import kq.server.gm.trpgmode.mode1.HatuneRoomMode;
+import kq.server.gm.trpgmode.TrpgMode;
 import kq.server.util.MessageUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -17,37 +18,49 @@ import java.util.Map;
 public class TrpgRunner extends Thread {
 
     private static final Logger logger = Logger.getLogger(TrpgRunner.class);
-    private TrpgMode trpg;
+    protected TrpgMode trpg;
     private Message message;
     private JSONObject resjson;
-    private List<User> userlist;
-    Map<Integer, List<String>> userOption;
+    protected Map<Integer, TrpgUser> userlist;
+    protected Map<Integer, List<String>> userOption;
 
-    public TrpgRunner(Message message, User... users){
-        trpg = new HatuneRoomMode();
-        userlist = new ArrayList<>();
+    protected TrpgRunner(){}
+
+    public TrpgRunner(Message message, TrpgMode trpg, User... users){
+        this.trpg = trpg;
+        userlist = new HashMap<>();
         userOption = new HashMap<>();
         for(User u:users){
-            userlist.add(u);
+            TrpgUser tu = new TrpgUser();
+            tu.setName(u.getName());
+            tu.setUserId(u.getUser_id());
+            tu.setUser(u);
+            userlist.put(tu.getUserId(), tu);
             userOption.put(u.getUser_id(), new ArrayList());
         }
-        trpg.setUsers(userlist);
-        trpg.setUserOption(userOption);
+        this.trpg.setUsers(userlist);
+        this.trpg.setUserOption(userOption);
         this.message = message;
 
+    }
+
+    public void setTrpg(TrpgMode trpg){
+        this.trpg = trpg;
     }
 
     @Override
     public void run(){
         long startTime = System.currentTimeMillis();
 
+        trpg.modeLoading();
         trpg.setStartTime(startTime);
 
-        resjson = MessageUtil.addJsonMessage(MessageUtil.getResBase(message), trpg.description);
-        message.setResbody(resjson);
-        MessageSender.sendMessage(message);
+//        resjson = MessageUtil.addJsonMessage(MessageUtil.getResBase(message), trpg.getDescription());
+//        message.setResbody(resjson);
+//        MessageSender.sendMessage(message);
+        sendMsg(trpg.getDescription());
 
-        while (!trpg.end()){
+        while (!trpg.isEnd()){
             try {
                 boolean hasRes = false;
                 trpg.nextStap();
@@ -58,31 +71,38 @@ public class TrpgRunner extends Thread {
                     if(StringUtils.isBlank(res)){
                         break;
                     }
-                    resjson = MessageUtil.addJsonMessage(MessageUtil.getResBaseNoAt(message), res);
-                    message.setResbody(resjson);
-                    MessageSender.sendMessage(message);
+                    sendMsg(res);
                     Thread.sleep(1000);
                     hasRes = true;
                 }
-
-//                if(!hasRes) {
-//                    resjson = MessageUtil.addJsonMessage(MessageUtil.getResBase(message), "什么都没有发生");
-//                    message.setResbody(resjson);
-//                    MessageSender.sendMessage(message);
-//                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
+    protected void sendMsg(String res) {
+        if(message != null) {
+            resjson = MessageUtil.addJsonMessage(MessageUtil.getResBaseNoAt(message), res);
+            message.setResbody(resjson);
+            MessageSender.sendMessage(message);
+        }
+    }
+
     public void addUser(User user) {
-        userlist.add(user);
+        TrpgUser tu = new TrpgUser();
+        tu.setName(user.getName());
+        tu.setUserId(user.getUser_id());
+        userlist.put(tu.getUserId(), tu);
         userOption.put(user.getUser_id(), new ArrayList());
     }
 
     public List<User> getUserlist() {
-        return userlist;
+        List<User> users = new ArrayList<>();
+        for(TrpgUser tuser:userlist.values()){
+            users.add(tuser.getUser());
+        }
+        return users;
     }
 
     public Map<Integer, List<String>> getUserOption() {

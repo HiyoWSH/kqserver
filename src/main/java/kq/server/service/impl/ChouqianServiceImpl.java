@@ -26,65 +26,57 @@ public class ChouqianServiceImpl implements ChouqianService {
     UserService userService;
 
     @Override
-    public JSONObject getChouqianRes(Message message) {
-        JSONObject resjson = getResBase(message);
-        int user_id = message.getUser_id();
-        User user = userMapper.getUser(user_id);
-        if(user == null){
-            user = new User();
-            user.setUser_id(user_id);
-            userMapper.insertUser(user);
-        }
+    public String getChouqianRes(User user) {
+        StringBuilder stringBuilderRes = new StringBuilder();
+
         // 今日已抽过
         if(user.getLast_qian() != null && user.getLast_get_qian() != null
                 && getTodayStartTime() < user.getLast_get_qian().getTime()){
-            return getHadChouqianRes(resjson, user);
+            return getHadChouqianRes(user);
         }
 
         String qian = chouqian();
-        resjson = getChouqianRes(resjson, qian);
-        resjson = getCoinqianRes(resjson, qian, user);
+        stringBuilderRes.append(getChouqianRes(qian)).append("\n");
+        stringBuilderRes.append(getCoinqianRes(qian, user));
 
         user.setLast_qian(qian);
         user.setLast_get_qian(new Date());
         userMapper.updateUser(user);
-        return resjson;
+        return stringBuilderRes.toString();
     }
 
-    private JSONObject getCoinqianRes(JSONObject resjson, String qian, User user) {
+    private String getCoinqianRes(String qian, User user) {
+        StringBuilder stringBuilderRes = new StringBuilder();
         int coin = 0;
         switch (qian) {
             case "大吉":
-                addJsonMessageWithEnter(resjson, "今天运势不错哦(硬币+5)");
+                stringBuilderRes.append("今天运势不错哦(硬币+5)").append("\n");
                 coin = 5;break;
             case "小吉":
-                addJsonMessageWithEnter(resjson, "今天似乎会有好运呢(硬币+3)");
+                stringBuilderRes.append("今天似乎会有好运呢(硬币+3)").append("\n");
                 coin = 3;break;
             case "末吉":
-                addJsonMessageWithEnter(resjson, "今天运势还行(硬币+1)");
+                stringBuilderRes.append("今天运势还行(硬币+1)").append("\n");
                 coin = 1;break;
             case "大凶":
-                addJsonMessageWithEnter(resjson, "今天...老实的待在家里会比较好吧(硬币-1)");
+                stringBuilderRes.append("今天...老实的待在家里会比较好吧(硬币-1)").append("\n");
                 coin = -1;break;
             case " 凶 ":
             default:
-                addJsonMessageWithEnter(resjson, "今天运势似乎不太好呢(硬币+0)");
+                stringBuilderRes.append("今天运势似乎不太好呢(硬币+0)").append("\n");
                 coin = 0;break;
         }
         userService.getCoins(user, coin);
-        addJsonMessageWithEnter(resjson, "硬币数：" + user.getCoins());
-        return resjson;
+        stringBuilderRes.append("硬币数：" + user.getCoins());
+        return stringBuilderRes.toString();
     }
 
-    private JSONObject getHadChouqianRes(JSONObject resjson, User user){
-        resjson = getChouqianRes(resjson, user.getLast_qian());
-        resjson = addJsonMessage(resjson, "<既定的命运无法改变>");
-        return resjson;
+    private String getHadChouqianRes(User user){
+        return getChouqianRes(user.getLast_qian()) + "\n<既定的命运无法改变>";
     }
 
-    private JSONObject getChouqianRes(JSONObject resjson, String qian){
-        String resmsg = chouqianMsg(qian);
-        return addJsonMessage(resjson, resmsg);
+    private String getChouqianRes(String qian){
+        return chouqianMsg(qian);
     }
 
     private String chouqianMsg(String qian){
@@ -109,6 +101,14 @@ public class ChouqianServiceImpl implements ChouqianService {
         } else {
             return "大凶";
         }
+    }
+
+    private String enterBuilder(String... strs){
+        StringBuilder stringBuilderRes = new StringBuilder();
+        for(String str:strs){
+            stringBuilderRes.append(str).append("\n");
+        }
+        return stringBuilderRes.toString();
     }
 
 }

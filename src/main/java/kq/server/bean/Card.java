@@ -6,6 +6,10 @@ public class Card {
     String card_name;
     String card_description;
     String rare;
+    String imagepath;
+    String description;
+    String extendurl;
+
 
     public int getUser_id() {
         return user_id;
@@ -45,5 +49,29 @@ public class Card {
 
     public void setRare(String rare) {
         this.rare = rare;
+    }
+
+    public String getImagepath() {
+        return imagepath;
+    }
+
+    public void setImagepath(String imagepath) {
+        this.imagepath = imagepath;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getExtendurl() {
+        return extendurl;
+    }
+
+    public void setExtendurl(String extendurl) {
+        this.extendurl = extendurl;
     }
 }

@@ -1,13 +1,14 @@
-package kq.server.gm.trpg;
+package kq.server.gm.trpgmode.mode1;
 
 import kq.server.gm.trpgmode.Item;
 
-public class TrpgItems extends Item {
-    public TrpgItems(String name) {
+public class Mode1Item extends Item {
+
+    public Mode1Item(String name) {
         this.name = name;
     }
 
-    public TrpgItems(String name, String viewMse, String moveMsg) {
+    public Mode1Item(String name, String viewMse, String moveMsg) {
         this.name = name;
         this.viewMse = viewMse;
         this.moveMsg = moveMsg;

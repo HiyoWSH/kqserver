@@ -7,6 +7,7 @@ import kq.server.util.MessageUtil;
 public class Message {
 
     private static String MYINFO = "[CQ:at,qq=627985299]";
+    private static String MYAT = "@栗小栗";
     private static String MYINFOCONTEXT = "\\[CQ:at,qq=627985299\\]";
 
     private JSONObject body;
@@ -17,6 +18,7 @@ public class Message {
     private String post_type;
     private String raw_message;
     private JSONObject resbody;
+    private String targetUrl;
 
     public Message() {
     }
@@ -118,6 +120,14 @@ public class Message {
         MessageUtil.addJsonMessageWithEnterFirst(resbody, res);
     }
 
+    public String getTargetUrl() {
+        return targetUrl;
+    }
+
+    public void setTargetUrl(String targetUrl) {
+        this.targetUrl = targetUrl;
+    }
+
     public boolean needDeal() {
         switch (post_type){
             case "message":break;
@@ -130,7 +140,7 @@ public class Message {
                 return true;
             // 群
             case GROUP:
-                if(!this.raw_message.contains(MYINFO)){
+                if(!this.raw_message.contains(MYINFO) && !this.raw_message.contains(MYAT)){
                     return false;
                 };
                 break;
@@ -143,7 +153,7 @@ public class Message {
     }
 
     public String getCommand() {
-        return this.raw_message.replaceAll(MYINFOCONTEXT, "").trim();
+        return this.raw_message.replaceAll(MYINFOCONTEXT, "").replaceAll(MYAT, "").trim();
     }
 
     public static void main(String[] arg){

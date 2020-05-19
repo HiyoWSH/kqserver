@@ -6,13 +6,10 @@ import org.apache.log4j.Logger;
 
 import java.util.*;
 
-public class HatuneRoomMode extends TrpgMode {
+public class HatuneRoomMode extends TrpgBaseMode {
 
     private TrpgItems[][] map = new TrpgItems[3][4];
-    private Map<String, TrpgItems> items = new HashMap<>();
-    private List<Sence> sence;
-    private LinkedList<String> resMsgs = new LinkedList<>();
-    boolean isEnd = false;
+
     private static final Logger logger = Logger.getLogger(HatuneRoomMode.class);
     private static String YIZI = "椅";
     private static String ZHUOZI = "桌";
@@ -21,6 +18,11 @@ public class HatuneRoomMode extends TrpgMode {
     private long timeIndex = 0;
 
     public HatuneRoomMode() {
+        super();
+    }
+
+    @Override
+    public void modeLoaded() {
         this.description = "模组MODE1\n" +
                 "目标：逃离房间\n" +
                 "失败条件：？\n" +
@@ -53,7 +55,7 @@ public class HatuneRoomMode extends TrpgMode {
     }
 
     @Override
-    public boolean end() {
+    public boolean isEnd() {
         return isEnd;
     }
 
@@ -92,47 +94,8 @@ public class HatuneRoomMode extends TrpgMode {
         return "";
     }
 
-    private void doUserOperate(User user, String opt) {
-        if(StringUtils.isNotBlank(opt)) {
-            doUserOperate(user, opt.trim().split(" "));
-        }
-    }
-
-    private void doUserOperate(User user, String[] opt){
-        switch (opt[0]) {
-            case "观察":
-                doView(user, opt[1]);
-                break;
-            case "操作":
-                doOpt(user, opt);
-                break;
-            case "移动":
-                doMove(user, opt[1]);
-        }
-    }
-
-    private void doMove(User user, String s) {
-        resMsgs.add(items.get(s).move());
-    }
-
-    private void doView(User user, String s) {
-        resMsgs.add(items.get(s).view());
-    }
-
-    private void doOpt(User user, String[] opt) {
-        if(opt.length == 2){
-            doOpt(user, opt[1]);
-        } else if(opt.length == 3){
-            doOpt(user, opt[1], opt[2]);
-        }
-    }
-
-    private void doOpt(User user, String s) {
-        items.get(s).opt();
-        resMsgs.add(user.getName() + "尝试着去摆弄" + s + "，但是并不能弄出什么名堂来");
-    }
-
-    private void doOpt(User user, String optFrom, String optTo) {
+    @Override
+    void doOpt(User user, String optFrom, String optTo) {
         if(isDoOpt(optFrom, optTo, YIZI, "门")){
             resMsgs.add(user.getName() + "尝试着用椅子去撞门");
             int judge = getTrpgJudge();
@@ -178,20 +141,4 @@ public class HatuneRoomMode extends TrpgMode {
         }
     }
 
-    private String judgeMsg(int judge, int i) {
-        if(judge <= i && judge <= 4) return "大成功";
-        if(judge <= i) return "成功";
-        if(judge > i && judge >= 97) return "大失败";
-        if(judge > i) return "失败";
-
-        return "失败";
-    }
-
-    private boolean isDoOpt(String s1, String m1){
-        return s1.equals(m1);
-    }
-
-    private boolean isDoOpt(String s1, String s2, String m1, String m2){
-        return (s1.equals(m1) && s2.equals(m2));
-    }
 }
