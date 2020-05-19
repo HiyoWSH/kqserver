@@ -9,6 +9,7 @@ import com.jayway.jsonpath.ReadContext;
 import kq.server.bean.ImageId;
 import kq.server.bean.Message;
 import kq.server.bean.User;
+import kq.server.config.Configuation;
 import kq.server.mapper.ImageIdMapper;
 import kq.server.mapper.UserMapper;
 import kq.server.service.*;
@@ -45,7 +46,7 @@ public class KqServerForMiraiController {
     public String eventsReceice(@RequestBody JSONObject body){
         logger.info("Mirai上报消息 "+ body.toJSONString());
 
-        long me = 627985299;
+        long me = Configuation.getMe();
         if(!body.containsKey("sender") || body.getJSONObject("sender").getLong("id") == me){
             return "skip deal";
         }

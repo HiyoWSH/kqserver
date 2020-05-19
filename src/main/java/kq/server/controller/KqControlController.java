@@ -1,6 +1,8 @@
 package kq.server.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import kq.server.bean.Achievement;
+import kq.server.config.Configuation;
 import kq.server.mapper.AchievementMapper;
 import kq.server.service.*;
 import kq.server.threads.AchievementSender;
@@ -20,7 +22,6 @@ import javax.annotation.PostConstruct;
 public class KqControlController {
 
     private static Logger logger = Logger.getLogger(KqControlController.class);
-    public static String MESSAGE_SOURCE = "Mirai";//"KQ";//
 
     @Autowired
     private MessageHandlerService messageHandlerService;
@@ -37,9 +38,16 @@ public class KqControlController {
 
     @PostConstruct
     public void controlInit(){
-        if(StringUtils.equals(MESSAGE_SOURCE, "Mirai")){
+
+        System.out.println("###key###" + Configuation.authKey);
+        System.out.println("###key###" + Configuation.getRunMode());
+        System.out.println("###key###" + Configuation.getMe());
+        System.out.println("###key###" + Configuation.getMes());
+        System.out.println("###key###" + Configuation.getMiraiserver());
+
+        if(StringUtils.equals(Configuation.getRunMode(), "Mirai")){
             miraiInit();
-        } else if(StringUtils.equals(MESSAGE_SOURCE, "KQ")){
+        } else if(StringUtils.equals(Configuation.getRunMode(), "KQ")){
             kqInit();
         }
         init();

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import kq.server.bean.ImageId;
 import kq.server.bean.MiraiMessage;
 import kq.server.bean.User;
+import kq.server.config.Configuation;
 import kq.server.gm.trpgmode.mode1.HatuneRoomMode;
 import kq.server.gm.trpgmode.mode2.ZonbiRoomMode;
 import kq.server.mapper.ImageIdMapper;
@@ -74,9 +75,10 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
             resjson.put("target", getTarget(body));
             String commandRes = "";
             long targetAtId = 0;
-            String mes = "@栗小栗";
+            String mes = Configuation.getMes();
+            long me = Configuation.getMe();
 
-            if (isAtMe(body, 627985299, mes) && StringUtils.isNotBlank(command)) {
+            if (isAtMe(body, me, mes) && StringUtils.isNotBlank(command)) {
                 command = command.replaceAll(mes,"").trim();
                 if(trpgRunner != null && trpgRunner.isAlive()){
                     for(User trpgUser:trpgRunner.getUserlist()){
