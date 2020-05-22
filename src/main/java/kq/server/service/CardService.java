@@ -15,4 +15,5 @@ public interface CardService {
     String doCardExchange(User user, String command);
     List<Card> createShopCards();
     void checkAchievement(User user, Message message);
+    void checkAchievement(User user, JSONObject body);
 }

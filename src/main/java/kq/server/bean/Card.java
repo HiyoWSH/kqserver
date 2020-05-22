@@ -2,7 +2,7 @@ package kq.server.bean;
 
 public class Card {
     int card_id;
-    int user_id;
+    long user_id;
     String card_name;
     String card_description;
     String rare;
@@ -11,11 +11,11 @@ public class Card {
     String extendurl;
 
 
-    public int getUser_id() {
+    public long getUser_id() {
         return user_id;
     }
 
-    public void setUser_id(int user_id) {
+    public void setUser_id(long user_id) {
         this.user_id = user_id;
     }
 

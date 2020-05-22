@@ -100,6 +100,10 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
                     sendSeTu(body);
                     return "";
                 }
+                if(command.contains("不够色") || command.contains("不够涩") || command.contains("不够瑟") ){
+                    sendSeTuH(body);
+                    return "";
+                }
                 if (RandomUtil.getNextInt(100) > 96) {
                     try {
                         commandRes = normalService.getTuLingRes(command);
@@ -113,6 +117,8 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
                 resjson.put("messageChain", createMessageTextChain(commandRes));
                 miraiMessageSenderService.sendMessage(getType(body), resjson, targetAtId);
             }
+            // 检测成就
+            cardService.checkAchievement(user, body);
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -186,7 +192,7 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
             resjson.put("group", getTarget(body));
 
             sendImage(resjson, path);
-        } else if(RandomUtil.getNextInt(100) > 60) {
+        } else if(RandomUtil.getNextInt(100) > 40) {
             logger.info("image source 2");
             String randomImgRes = getRandomImageFromRemote1();
             try{
@@ -211,6 +217,19 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
 
             sendImage(resjson, randomImgRes);
         }
+    }
+
+    private void sendSeTuH(JSONObject body){
+        String randomImgRes = getRandomImageFromRemote2();
+        try{
+            DownloadURLFile.downloadImgByNet(randomImgRes, "F:\\setudir\\fromNet", String.valueOf(System.currentTimeMillis()) + ".jpg");
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        JSONObject resjson = new JSONObject();
+        resjson.put("group", getTarget(body));
+
+        sendImage(resjson, randomImgRes);
     }
 
     private String getRandomImageFromRemote1(){

@@ -11,7 +11,7 @@ public abstract class TrpgMode {
     /**
      * 模组用户列表 [用户id，用户]
      */
-    protected Map<Integer, TrpgUser> users = new HashMap<>();
+    protected Map<Long, TrpgUser> users = new HashMap<>();
     /**
      * 模组物品列表 [物品名，物品]
      */
@@ -23,7 +23,7 @@ public abstract class TrpgMode {
     /**
      * 用户指令列表 [用户id，用户指令列表]
      */
-    protected Map<Integer, List<String>> userOption = new HashMap<>();
+    protected Map<Long, List<String>> userOption = new HashMap<>();
     /**
      * 返回消息列表
      */
@@ -86,11 +86,11 @@ public abstract class TrpgMode {
 
     // getter and setter
 
-    public Map<Integer, TrpgUser> getUsers() {
+    public Map<Long, TrpgUser> getUsers() {
         return users;
     }
 
-    public void setUsers(Map<Integer, TrpgUser> users) {
+    public void setUsers(Map<Long, TrpgUser> users) {
         this.users = users;
     }
 
@@ -110,11 +110,11 @@ public abstract class TrpgMode {
         this.sences = sences;
     }
 
-    public Map<Integer, List<String>> getUserOption() {
+    public Map<Long, List<String>> getUserOption() {
         return userOption;
     }
 
-    public void setUserOption(Map<Integer, List<String>> userOption) {
+    public void setUserOption(Map<Long, List<String>> userOption) {
         this.userOption = userOption;
     }
 

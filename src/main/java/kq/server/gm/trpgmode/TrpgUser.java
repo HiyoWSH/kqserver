@@ -13,7 +13,7 @@ public class TrpgUser {
     /**
      * 用户id
      */
-    int userId;
+    long userId;
     /**
      * 用户名称
      */
@@ -31,11 +31,11 @@ public class TrpgUser {
         this.user = user;
     }
 
-    public int getUserId() {
+    public long getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(long userId) {
         this.userId = userId;
     }
 

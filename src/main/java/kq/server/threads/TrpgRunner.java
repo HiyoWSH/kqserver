@@ -21,8 +21,8 @@ public class TrpgRunner extends Thread {
     protected TrpgMode trpg;
     private Message message;
     private JSONObject resjson;
-    protected Map<Integer, TrpgUser> userlist;
-    protected Map<Integer, List<String>> userOption;
+    protected Map<Long, TrpgUser> userlist;
+    protected Map<Long, List<String>> userOption;
 
     protected TrpgRunner(){}
 
@@ -105,7 +105,7 @@ public class TrpgRunner extends Thread {
         return users;
     }
 
-    public Map<Integer, List<String>> getUserOption() {
+    public Map<Long, List<String>> getUserOption() {
         return userOption;
     }
 }

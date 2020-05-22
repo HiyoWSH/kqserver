@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 import static kq.server.util.MessageUtil.addJsonMessageWithEnter;
+import static kq.server.util.MiraiMessageUtil.*;
 import static kq.server.util.TimeUtil.*;
 import static kq.server.util.MessageUtil.*;
 import static kq.server.util.RandomUtil.*;
@@ -95,16 +96,17 @@ public class CardServiceImpl implements CardService {
             System.out.println("未输入卡牌名称");
         }
 
-        int user_id = user.getUser_id();
+        long user_id = user.getUser_id();
         List<Card> userCards = cardMapper.getUserCards(user_id);
         if(userCards.size() == 0){
             stringBuilderRes.append("\n").append("你还没有获得任何卡牌呢，输入抽卡抽取");
             return stringBuilderRes.toString();
         }
         stringBuilderRes.append("\n").append("你拥有的卡牌如下：");
-        for(Card c:userCards){
-            stringBuilderRes.append("\n").append(String.format("%s(%s)", c.getCard_name(), c.getRare()));
-        }
+        userCards.forEach(c -> stringBuilderRes.append("\n").append(String.format("%s(%s)", c.getCard_name(), c.getRare())));
+//        for(Card c:userCards){
+//            stringBuilderRes.append("\n").append(String.format("%s(%s)", c.getCard_name(), c.getRare()));
+//        }
         stringBuilderRes.append("\n").append("输入查看卡牌 [卡牌名称] 查看卡牌详细信息");
         return stringBuilderRes.toString();
     }
@@ -134,7 +136,6 @@ public class CardServiceImpl implements CardService {
         List<Card> shopCards = CardShop.getShopCards();
         int index = 1;
         for (Card c:shopCards){
-
             stringBuilderRes.append("\n").append(String.format("%d.%s (%s)......%d硬币", index, c.getCard_name(), c.getRare(), (140-20*index)));
             index++;
         }
@@ -278,7 +279,7 @@ public class CardServiceImpl implements CardService {
      * @return 获得的硬币数
      */
     private int saveUserCard(User user, List<Card> cards, int count){
-        int userId = user.getUser_id();
+        long userId = user.getUser_id();
         List<Card> userCards = cardMapper.getUserCards(userId);
         int getCoins = 0;
         for(Card c:cards){
@@ -350,6 +351,47 @@ public class CardServiceImpl implements CardService {
     }
 
     /**
+     * 检查是否满足新的成就
+     * @param user
+     */
+    @Override
+    public void checkAchievement(User user, JSONObject body) {
+        List<Card> userCards = cardMapper.getUserCards(user.getUser_id());
+        for(Achievement achievement:Achievement.achievementList){
+            if(!user.hasAchievement(achievement)) {
+                int get = 0;
+                String[] needed = achievement.getNeededArray();
+                for (String need : needed) {
+                    for (Card card : userCards) {
+                        if (need.equals(card.getCard_name())) {
+                            get++;
+                            break;
+                        }
+                    }
+                }
+                if (get >= needed.length || (achievement.getNeed_count() > 0 && get >= achievement.getNeed_count())) {
+                    user.addAchievement(achievement);
+                    JSONObject resjson = new JSONObject();
+                    resjson.put("target", getTarget(body));
+                    resjson.put("messageChain", createMessageTextChain(sendAchievementStr(achievement)));
+                    if(achievement.getImagepath() != null) {
+                        miraiMessageSenderService.sendImageWait(achievement.getImagepath());
+                    }
+                    miraiMessageSenderService.sendMessage(getType(body), resjson, user.getUser_id());
+                }
+            }
+        }
+        userMapper.updateUser(user);
+    }
+
+    String sendAchievementStr(Achievement achievement){
+        StringBuilder builder = new StringBuilder();
+        builder.append("\n").append("获得成就[" + achievement.getAchievement_name() + "]");
+        builder.append("\n").append("可输入命令【查看成就】查看已获得的成就");
+        return builder.toString();
+    }
+
+    /**
      * 交换卡牌
      * @param c
      * @param price
@@ -377,7 +419,7 @@ public class CardServiceImpl implements CardService {
 
     // 用户是否拥有卡牌c
     private boolean hasCard(User user, Card c) {
-        int userId = user.getUser_id();
+        long userId = user.getUser_id();
         List<Card> userCards = cardMapper.getUserCards(userId);
         for(Card uc:userCards) {
             if (uc.getCard_id() == c.getCard_id()) {

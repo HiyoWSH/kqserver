@@ -7,7 +7,7 @@
     select * from user
   </select>
 
-  <select id="getUser" parameterType="java.lang.Integer" resultType="kq.server.bean.User">
+  <select id="getUser" parameterType="java.lang.Long" resultType="kq.server.bean.User">
     select * from user where user_id = #{user_id}
   </select>
 

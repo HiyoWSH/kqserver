@@ -7,7 +7,7 @@
     select * from cards
   </select>
 
-  <select id="getUserCards" parameterType="java.lang.Integer" resultType="kq.server.bean.Card">
+  <select id="getUserCards" parameterType="java.lang.Long" resultType="kq.server.bean.Card">
     SELECT * from user_card u LEFT JOIN cards c on u.card_id = c.card_id where u.user_id = #{user_id} order by c.rare asc;
   </select>
 

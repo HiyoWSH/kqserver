@@ -5,6 +5,7 @@ import kq.server.bean.Message;
 import kq.server.bean.User;
 import kq.server.mapper.UserMapper;
 import kq.server.service.ChouqianService;
+import kq.server.service.MiraiMessageSenderService;
 import kq.server.service.UserService;
 import kq.server.util.RandomUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class ChouqianServiceImpl implements ChouqianService {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    MiraiMessageSenderService miraiMessageSenderService;
 
     @Override
     public String getChouqianRes(User user) {
@@ -52,19 +56,23 @@ public class ChouqianServiceImpl implements ChouqianService {
             case "大吉":
                 stringBuilderRes.append("今天运势不错哦(硬币+5)").append("\n");
                 coin = 5;break;
-            case "小吉":
+            case "中吉":
                 stringBuilderRes.append("今天似乎会有好运呢(硬币+3)").append("\n");
+                miraiMessageSenderService.sendImageWait("file:///F:/setudir/chouqian/%E4%B8%AD%E5%90%89.jpg");
                 coin = 3;break;
             case "末吉":
                 stringBuilderRes.append("今天运势还行(硬币+1)").append("\n");
                 coin = 1;break;
             case "大凶":
                 stringBuilderRes.append("今天...老实的待在家里会比较好吧(硬币-1)").append("\n");
-                coin = -1;break;
+                coin = -1;
+                miraiMessageSenderService.sendImageWait("file:///F:/setudir/chouqian/%E5%A4%A7%E5%87%B6.jpg");
+                break;
             case " 凶 ":
             default:
                 stringBuilderRes.append("今天运势似乎不太好呢(硬币+0)").append("\n");
-                coin = 0;break;
+                coin = 0;
+                break;
         }
         userService.getCoins(user, coin);
         stringBuilderRes.append("硬币数：" + user.getCoins());
@@ -93,7 +101,7 @@ public class ChouqianServiceImpl implements ChouqianService {
         if(r >= 90){
             return "大吉";
         } else if(r >= 50){
-            return "小吉";
+            return "中吉";
         } else if(r >= 20){
             return "末吉";
         } else if(r >= 5){

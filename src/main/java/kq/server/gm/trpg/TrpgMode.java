@@ -13,7 +13,7 @@ import java.util.Map;
 
 public abstract class TrpgMode {
     List<User> users = new ArrayList<>();
-    Map<Integer, List<String>> userOption = new HashMap<>();
+    Map<Long, List<String>> userOption = new HashMap<>();
     long startTime;
     public String description = "";
 
@@ -25,11 +25,11 @@ public abstract class TrpgMode {
         this.users = users;
     }
 
-    public Map<Integer, List<String>> getUserOption() {
+    public Map<Long, List<String>> getUserOption() {
         return userOption;
     }
 
-    public void setUserOption(Map<Integer, List<String>> userOption) {
+    public void setUserOption(Map<Long, List<String>> userOption) {
         this.userOption = userOption;
     }
 

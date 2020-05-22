@@ -105,6 +105,7 @@
             <version>2.4.0</version>
         </dependency>
 
+        <!-- 需要这个依赖才能自动获取配置文件中的配置 见类Configuation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
