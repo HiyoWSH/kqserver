@@ -14,7 +14,15 @@ import static kq.server.util.RandomUtil.getNextInt;
 public class ImageServiceImpl implements ImageService {
 
     private static List imgIndex;
-    private static String imgDir = "F:\\setudir\\第二季★第21~50期-白鹭学园";//""C:\\Users\\wangsh\\Pictures\\二次图";
+    private static String imgDir = "F:\\setudir\\localsetu";//""C:\\Users\\wangsh\\Pictures\\二次图";
+
+    public static void main(String argv[]) {
+        ImageServiceImpl impl = new ImageServiceImpl();
+        impl.initImageCache();
+        String path = "file:///yori/localsetu" + impl.getImage().substring(20).replaceAll("\\\\", "/");//linux用
+        System.out.println(path);
+    }
+
 
     @Override
     public void initImageCache() {
@@ -48,7 +56,7 @@ public class ImageServiceImpl implements ImageService {
         List list = new ArrayList();
         for(File cfile:fileDir.listFiles()){
             if(cfile.isDirectory()){
-                list.add(getImages(cfile));
+                list.addAll(getImages(cfile));
             } else if (cfile.getName().endsWith("jpg") || cfile.getName().endsWith("png")
                     || cfile.getName().endsWith("jfif") || cfile.getName().endsWith("webp")
                     || cfile.getName().endsWith("jpg_large") || cfile.getName().endsWith("jpg-large")

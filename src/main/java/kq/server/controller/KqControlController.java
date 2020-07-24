@@ -1,9 +1,11 @@
 package kq.server.controller;
 
-import com.alibaba.fastjson.JSONObject;
 import kq.server.bean.Achievement;
+import kq.server.bean.rss.Houkai3RSS;
 import kq.server.config.Configuation;
 import kq.server.mapper.AchievementMapper;
+import kq.server.mapper.RSSMapper;
+import kq.server.rss.RSSpush;
 import kq.server.service.*;
 import kq.server.threads.AchievementSender;
 import kq.server.threads.MessageHandler;
@@ -17,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import javax.annotation.PostConstruct;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class KqControlController {
@@ -35,10 +39,11 @@ public class KqControlController {
     ImageService imageService;
     @Autowired
     MiraiMessageSenderService miraiMessageSenderService;
+    @Autowired
+    private RSSMapper rssMapper;
 
     @PostConstruct
     public void controlInit(){
-
         System.out.println("###key###" + Configuation.authKey);
         System.out.println("###key###" + Configuation.getRunMode());
         System.out.println("###key###" + Configuation.getMe());
@@ -60,7 +65,18 @@ public class KqControlController {
         MiraiSender sender = new MiraiSender();
         sender.setMiraiMessageSenderService(miraiMessageSenderService);
         sender.start();
-        imageService.initImageCache();
+        try{
+            imageService.initImageCache();
+        } catch (Exception e) {
+            logger.info(e);
+        }
+
+        RSSpush rsSpush = new RSSpush(rssMapper, miraiMessageSenderService);
+        Map map = new HashMap();
+        map.put("host", "rsshub.app");
+        rsSpush.addRss(new Houkai3RSS("崩坏3rss", "http://rsshub.app.cdn.cloudflare.net/bilibili/user/dynamic/27534330",
+                367896221, map, ""));
+        rsSpush.start();
     }
 
     /**
@@ -81,7 +97,7 @@ public class KqControlController {
         CardShop.setShopCards(cardService.createShopCards());
 
         try{
-            storyService.initStoryCache();
+//            storyService.initStoryCache();
         } catch (Exception e){
             logger.info(e);
         }

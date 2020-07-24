@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kq.server.mapper.RSSMapper">
+    <select id="getRss" parameterType="java.lang.String" resultType="kq.server.bean.rss.RSSBean">
+    select * from rss where name = #{name}
+  </select>
+
+    <insert id="insertRss" parameterType="kq.server.bean.rss.RSSBean">
+    insert into rss(name, update_time) values (#{name},#{update_time})
+  </insert>
+
+    <update id="updateRss" parameterType="kq.server.bean.rss.RSSBean">
+    update rss set update_time = #{update_time}
+    where name = #{name}
+  </update>
+</mapper>

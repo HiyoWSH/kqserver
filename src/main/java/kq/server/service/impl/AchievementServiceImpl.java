@@ -42,6 +42,7 @@ public class AchievementServiceImpl implements AchievementService {
                 }
             }
         } catch (Exception e){
+            logger.error(e);
             e.printStackTrace();
         }
 

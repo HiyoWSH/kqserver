@@ -76,6 +76,7 @@ public class TrpgRunner extends Thread {
                     hasRes = true;
                 }
             } catch (Exception e) {
+                logger.error(e);
                 e.printStackTrace();
             }
         }

@@ -37,6 +37,17 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
 
     private static Logger logger = Logger.getLogger(MiraiMessageHandlerServiceImpl.class);
 
+    String localFromNet = "F:\\setudir\\localsetu\\fromNet";
+    String setuFormNetR18 = "F:\\setudir\\fromNetR18";
+//    String setuFormNet = "F:\\setudir\\fromNet";
+//    String localFromNet = "/yori/kqserver/setu/local";
+//    String setuFormNetR18 = "/yori/kqserver/setu/r18";
+//    String setuFormNet = "/yori/kqserver/setu/local";
+    boolean setuMode = true;
+    long[] setuTarget = new long[]{};
+    boolean randomReplyMode = true;
+    long[] randomReplyTarget = new long[]{};
+
     @Autowired MiraiMessageSenderService miraiMessageSenderService;
 
     RestTemplate restTemplate = new RestTemplate();
@@ -95,20 +106,34 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
                     commandRes = getCommandRes(user, command);
                 }
                 targetAtId = user.getUser_id();
+
+                // 检测成就
+                cardService.checkAchievement(user, body);
             } else {
-                if(command.contains("色图") || command.contains("涩图") || command.contains("setu") || command.contains("瑟图") ){
-                    sendSeTu(body);
-                    return "";
-                }
-                if(command.contains("不够色") || command.contains("不够涩") || command.contains("不够瑟") ){
-                    sendSeTuH(body);
-                    return "";
-                }
-                if (RandomUtil.getNextInt(100) > 96) {
+                if(setuMode) {
                     try {
-                        commandRes = normalService.getTuLingRes(command);
-                    } catch (Exception e){
-                        logger.warn(e);
+                        long target = getTarget(body);
+
+                        if (command.contains("色图") || command.contains("涩图") || command.contains("setu") || command.contains("瑟图")) {
+                            sendSeTu(body);
+                            return "";
+                        }
+                        if (command.contains("不够色") || command.contains("不够涩") || command.contains("不够瑟")) {
+                            sendSeTuH(body);
+                            return "";
+                        }
+                    } catch (Exception e) {
+                        logger.error(e);
+                        commandRes = "涩图，涩图它没有了";
+                    }
+                }
+                if(randomReplyMode) {
+                    if (RandomUtil.getNextInt(100) > 96) {
+                        try {
+                            commandRes = normalService.getTuLingRes(command);
+                        } catch (Exception e) {
+                            logger.warn(e);
+                        }
                     }
                 }
             }
@@ -117,9 +142,8 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
                 resjson.put("messageChain", createMessageTextChain(commandRes));
                 miraiMessageSenderService.sendMessage(getType(body), resjson, targetAtId);
             }
-            // 检测成就
-            cardService.checkAchievement(user, body);
         } catch (Exception e){
+            logger.error(e);
             e.printStackTrace();
         }
         return "";
@@ -155,49 +179,23 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
     }
 
     private void sendSeTu(JSONObject body){
-        // 通过上传 无法上传 未使用
-//                String path = "C:\\Users\\wangsh\\Pictures\\QQ图片20200429090556.png";
-//                ImageId imageId = imageIdMapper.getImageIdByPass(path);
-//                if(imageId == null){
-//                    imageId = new ImageId();
-//                    String res = uploadImage(path);
-//                    logger.info(res);
-//                    imageId.setImageid(res);
-//                    imageId.setPath(path);
-//                    imageIdMapper.insertImageId(imageId);
-//                }
-//                JSONObject json = new JSONObject();
-//                json.put("type","Image");
-//                json.put("text",JSONObject.parseObject(imageId.getImageid()).get("imageId"));
-//
-//                JSONArray array = createMessageChain("");
-//                array.add(json);
-//                JSONObject resjson = new JSONObject();
-//                resjson.put("target", getTarget(body));
-//                resjson.put("messageChain", array);
-//                String type = getType(body);
-//                switch (type) {
-//                    case "GroupMessage":
-//                        sendGroupMessage(resjson);
-//                        break;
-//                    case "FriendMessage":
-//                        sendFriendMessage(resjson);
-//                        break;
-//                }
-//                return "";
-        if(RandomUtil.getNextInt(100) > 60) {
+        if(RandomUtil.getNextInt(100) > 20) {
             logger.info("image source 1");
-            String path = "file:///" + imageService.getImage();
+            String path = imageService.getImage();
+//            String path = "file:///" + imageService.getImage();
+//            String path = "file:///yori/localsetu" + imageService.getImage().substring(20).replaceAll("\\\\", "/");//linux用
             JSONObject resjson = new JSONObject();
             resjson.put("group", getTarget(body));
 
             sendImage(resjson, path);
-        } else if(RandomUtil.getNextInt(100) > 40) {
+        } else
+        if(RandomUtil.getNextInt(100) > 50) {
             logger.info("image source 2");
             String randomImgRes = getRandomImageFromRemote1();
             try{
-                DownloadURLFile.downloadFromUrl(randomImgRes, "F:\\setudir\\fromNet");
+                randomImgRes = DownloadURLFile.downloadFromUrl(randomImgRes, localFromNet);
             } catch (Exception e){
+                logger.error(e);
                 e.printStackTrace();
             }
             JSONObject resjson = new JSONObject();
@@ -206,24 +204,16 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
             sendImage(resjson, randomImgRes);
         } else {
             logger.info("image source 3");
-            String randomImgRes = getRandomImageFromRemote2();
-            try{
-                DownloadURLFile.downloadImgByNet(randomImgRes, "F:\\setudir\\fromNet", String.valueOf(System.currentTimeMillis()) + ".jpg");
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-            JSONObject resjson = new JSONObject();
-            resjson.put("group", getTarget(body));
-
-            sendImage(resjson, randomImgRes);
+            sendSeTuH(body);
         }
     }
 
     private void sendSeTuH(JSONObject body){
         String randomImgRes = getRandomImageFromRemote2();
         try{
-            DownloadURLFile.downloadImgByNet(randomImgRes, "F:\\setudir\\fromNet", String.valueOf(System.currentTimeMillis()) + ".jpg");
+            randomImgRes = DownloadURLFile.downloadImgByNet(randomImgRes, setuFormNetR18, String.valueOf(System.currentTimeMillis()) + ".jpg");
         } catch (Exception e){
+            logger.error(e);
             e.printStackTrace();
         }
         JSONObject resjson = new JSONObject();
@@ -253,12 +243,14 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
         HttpEntity requestEntity=new HttpEntity("", headers);
         ResponseEntity<String> rss = restTemplate.exchange(url, HttpMethod.GET, requestEntity, 	String.class, new HashMap<>());
         String randomImgRes = rss.getBody();
-        Pattern pattern = Pattern.compile("url: \"https://img1\\.picloli-1\\.xyz.*?\\.jpg");
+        Pattern pattern = Pattern.compile("src=\"https://img1\\.picloli-1\\.xyz.*?\\.(jpg|png)");
+//        Pattern pattern = Pattern.compile("url: \"https://img1\\.picloli-1\\.xyz.*?\\.jpg");
         Matcher matcher = pattern.matcher(randomImgRes);
         if (matcher.find()) {
             randomImgRes = matcher.group();
         }
-        randomImgRes = randomImgRes.replaceAll("url: \"","");
+        randomImgRes = randomImgRes.replaceAll("src=\"","");
+//        randomImgRes = randomImgRes.replaceAll("url: \"","");
         return randomImgRes;
     }
 
@@ -268,8 +260,14 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
         JSONArray array = new JSONArray();
         array.add(imageUrl);
         targetJson.put("urls", array);
+        if(imageId == null){
+            imageId = getImageId(imageUrl, imageId);
+        }
         if(imageId != null){
-            targetJson.put("imageId", imageId.getImageid());
+//            targetJson.put("imageId", imageId.getImageid());
+            targetJson.put("messageChain", createMessageImageChain(imageId.getImageid()));
+            miraiMessageSenderService.sendMessage("GroupMessage", targetJson);
+            return;
         }
         String res = miraiMessageSenderService.sendImageMessage(targetJson);
         if (imageId == null) {
@@ -278,6 +276,22 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
             imageId.setImageid(JSONArray.parseArray(res).getString(0));
             imageIdMapper.insertImageId(imageId);
         }
+    }
+
+    private ImageId getImageId(String imagePath, ImageId imageId) {
+        if(imageId != null && StringUtils.isNotBlank(imageId.getImageid())){
+            return imageId;
+        }
+        String uploadres = miraiMessageSenderService.uploadImage(imagePath);
+        JSONObject jsonres = JSONObject.parseObject(uploadres);
+        if(jsonres.containsKey("imageId")){
+            imageId = new ImageId();
+            imageId.setPath(imagePath);
+            imageId.setImageid(jsonres.getString("imageId"));
+            imageIdMapper.insertImageId(imageId);
+            return imageId;
+        }
+        return null;
     }
 
     private String getCommandRes(User user, String command) {

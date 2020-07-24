@@ -8,6 +8,8 @@ import kq.server.service.MiraiMessageSenderService;
 import kq.server.threads.MiraiSender;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -15,6 +17,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.io.FileInputStream;
 
 public class MiraiMessageUtil {
 
@@ -98,11 +101,29 @@ public class MiraiMessageUtil {
 
     public static MultiValueMap<String, Object> popHeaders(String session, String type, File img) {
         MultiValueMap<String, Object> map = new LinkedMultiValueMap<String, Object>();
-
-        map.add("sessionKey", session);
-        map.add("type",type);
-        map.add("img",img);
+//        FileSystemResource f = new FileSystemResource(img);
+//        try {
+//            byte[] bytesArray = new byte[(int) img.length()];
+//
+//            FileInputStream fis = new FileInputStream(img);
+//            fis.read(bytesArray); //read file into bytes[]
+//            fis.close();
+//
+//            ByteArrayResource contentsAsResource = new ByteArrayResource(bytesArray) {
+//                @Override
+//                public String getFilename() {
+//                    return "img";
+//                }
+//            };
+//
+//            map.add("sessionKey", session);
+//            map.add("type", type);
+//            map.add("img", contentsAsResource);
+//        } catch (Exception e){e.printStackTrace();}
         //.....
+        map.add("sessionKey", session);
+        map.add("type", type);
+        map.add("img", img);
         return map;
     }
 
@@ -111,6 +132,15 @@ public class MiraiMessageUtil {
         JSONObject json = new JSONObject();
         json.put("type","Plain");
         json.put("text",commandRes);
+        array.add(json);
+        return array;
+    }
+
+    public static JSONArray createMessageImageChain(String imageId) {
+        JSONArray array = new JSONArray();
+        JSONObject json = new JSONObject();
+        json.put("type","Image");
+        json.put("imageId",imageId);
         array.add(json);
         return array;
     }

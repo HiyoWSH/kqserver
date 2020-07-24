@@ -93,7 +93,7 @@ public class CardServiceImpl implements CardService {
                 return stringBuilderRes.toString();
             }
         }catch (Exception e){
-            System.out.println("未输入卡牌名称");
+            logger.warn("未输入卡牌名称");
         }
 
         long user_id = user.getUser_id();
@@ -121,7 +121,7 @@ public class CardServiceImpl implements CardService {
         try{
             System.out.println("command " + command);
             count = Integer.parseInt(command.replaceAll("[^0-9]",""));
-        } catch (Exception e){e.printStackTrace();}
+        } catch (Exception e){logger.error(e);e.printStackTrace();}
         return doGetCard(user, count);
     }
 
@@ -181,6 +181,7 @@ public class CardServiceImpl implements CardService {
                 index++;
             }
         } catch (Exception e){
+            logger.warn(e);
             stringBuilderRes.append("\n").append("交换失败");
         }
         return stringBuilderRes.toString();
@@ -377,11 +378,11 @@ public class CardServiceImpl implements CardService {
                     if(achievement.getImagepath() != null) {
                         miraiMessageSenderService.sendImageWait(achievement.getImagepath());
                     }
+                    userMapper.updateUser(user);
                     miraiMessageSenderService.sendMessage(getType(body), resjson, user.getUser_id());
                 }
             }
         }
-        userMapper.updateUser(user);
     }
 
     String sendAchievementStr(Achievement achievement){

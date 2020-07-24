@@ -57,6 +57,7 @@ public class KqServerController {
                 MessageHandler.dealMessage(msg);
 //            }
         } catch (Exception e){
+            logger.error("处理消息异常",e);
             return "";
         }
 
@@ -70,7 +71,7 @@ public class KqServerController {
                         msg.setResbody(resjson);
                         MessageSender.sendMessage(msg);
                     } catch (Exception e){
-                        logger.warn(e);
+                        logger.warn("获取随机自动回复异常",e);
                     }
                 }
             }

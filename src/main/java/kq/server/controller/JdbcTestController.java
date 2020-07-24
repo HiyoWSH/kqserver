@@ -2,21 +2,25 @@ package kq.server.controller;
 
 import kq.server.bean.Achievement;
 import kq.server.bean.Card;
+import kq.server.bean.rss.Houkai3RSS;
+import kq.server.bean.rss.RSS;
 import kq.server.bean.User;
 import kq.server.mapper.AchievementMapper;
 import kq.server.mapper.CardMapper;
+import kq.server.mapper.RSSMapper;
 import kq.server.mapper.UserMapper;
+import kq.server.rss.RSSpush;
+import kq.server.service.MiraiMessageSenderService;
 import kq.server.util.FileOperate;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.annotation.PostConstruct;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class JdbcTestController {
@@ -29,6 +33,10 @@ public class JdbcTestController {
     private CardMapper cardMapper;
     @Autowired
     private AchievementMapper achievementMapper;
+    @Autowired
+    private MiraiMessageSenderService miraiMessageSenderService;
+    @Autowired
+    private RSSMapper rssMapper;
 
 //    @PostConstruct
     public void test(){
@@ -85,5 +93,35 @@ public class JdbcTestController {
     public String reloadAchievement(){
         Achievement.achievementList = achievementMapper.getAchievements();
         return "ok";
+    }
+
+    @ResponseBody
+    @GetMapping("/uploadTest")
+    public String uploadTest(){
+        String path = "F:\\setudir\\fromNet38312979_p0.jpg";
+        String res = miraiMessageSenderService.uploadImage(path);
+        return res;
+    }
+
+    @ResponseBody
+    @GetMapping("/rssTest")
+    public String rssTest(){
+        Map map = new HashMap();
+        map.put("host", "rsshub.app");
+
+        RSSpush rsSpush = new RSSpush(rssMapper, miraiMessageSenderService);
+        RSS rss = new Houkai3RSS("测试rss", "http://rsshub.app.cdn.cloudflare.net/bilibili/user/dynamic/27534330",
+                367896221, map, "");
+
+        String rssres = rsSpush.getRssRes(rss);
+        logger.info("获得订阅内容" + rssres.substring(0, 20));
+        if(rsSpush.hasUpdate(rss, rssres)){
+            try {
+                rsSpush.dopush(rss, rssres);
+            } catch (Exception e){
+                logger.error(e);
+            }
+        }
+        return "res";
     }
 }

@@ -12,6 +12,7 @@ public class Configuation {
     public static String mes;
     public static String miraiserver;
     public static String authKey;
+    public static String groovyPath;
 
     public static String getRunMode() {
         return runMode;
@@ -51,5 +52,13 @@ public class Configuation {
 
     public static String getAuthKey() {
         return authKey;
+    }
+
+    public static String getGroovyPath() {
+        return groovyPath;
+    }
+
+    public static void setGroovyPath(String groovyPath) {
+        Configuation.groovyPath = groovyPath;
     }
 }

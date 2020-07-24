@@ -139,6 +139,7 @@ public class NormalServiceImpl implements NormalService {
             return res;
         } catch (Exception e){
             e.printStackTrace();
+            logger.error(e);
             return null;
         }
     }

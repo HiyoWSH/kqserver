@@ -19,4 +19,6 @@ public interface MiraiMessageSenderService {
     void sendMessage(String type, JSONObject json);
 
     void sendMessage(String type, JSONObject json, long targetId);
+
+    String uploadImage(String imgPath);
 }

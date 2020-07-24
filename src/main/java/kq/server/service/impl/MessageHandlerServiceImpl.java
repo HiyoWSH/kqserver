@@ -132,7 +132,7 @@ public class MessageHandlerServiceImpl implements MessageHandlerService {
             cardService.checkAchievement(user, message);
         } catch (Exception e){
             e.printStackTrace();
-            logger.error(e);
+            logger.error("模组内部错误", e);
         }
     }
 

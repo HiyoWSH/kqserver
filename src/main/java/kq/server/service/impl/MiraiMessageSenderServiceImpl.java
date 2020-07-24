@@ -7,6 +7,13 @@ import kq.server.config.Configuation;
 import kq.server.service.MiraiMessageHandlerService;
 import kq.server.service.MiraiMessageSenderService;
 import kq.server.util.MiraiMessageUtil;
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -14,8 +21,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 import static kq.server.util.HttpUtil.createHttpEntity;
 import static kq.server.util.HttpUtil.post;
@@ -49,9 +63,16 @@ public class MiraiMessageSenderServiceImpl implements MiraiMessageSenderService 
         String postRes = post(getTargetUrl(message), createHttpEntity(message.getBody()));
         message.setMsgres(postRes);
 
-        while (imageSendWaitList.get()!=null && imageSendWaitList.get().size() > 0){
-            String imageUrl = imageSendWaitList.get().pop();
-            miraiMessageHandlerService.sendImage(message.getBody(), imageUrl);
+        try {
+            while (imageSendWaitList.get() != null && imageSendWaitList.get().size() > 0) {
+                String imageUrl = imageSendWaitList.get().pop();
+                if(StringUtils.isNotBlank(imageUrl)) {
+                    miraiMessageHandlerService.sendImage(message.getBody(), imageUrl);
+                }
+            }
+        } catch (Exception e){
+
+            logger.error(e);
         }
     }
 
@@ -178,15 +199,51 @@ public class MiraiMessageSenderServiceImpl implements MiraiMessageSenderService 
         sendMessage(message);
     }
 
+    @Override
     public String uploadImage(String imgPath){
         String url = Configuation.getMiraiserver() + "/uploadImage";
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        MultiValueMap<String, Object> params = MiraiMessageUtil.popHeaders(session, "group", new File(imgPath));
+        File file = new File(imgPath);
+//        RestTemplate restTemplate = new RestTemplate();
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+//        MultiValueMap<String, Object> params = MiraiMessageUtil.popHeaders(session, "group", new File(imgPath));
+////        System.out.println(JSONObject.toJSONString(params));
+//        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(params, headers), String.class);
+//        return response.getBody();
+        Map<String,String> params = new HashMap<>();
+        params.put("sessionKey", session);
+        params.put("type", "group");
 
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(params, headers), String.class);
-        return response.getBody();
+        String result= null;
+        HttpClient httpClient = HttpClientBuilder.create().build();
+        HttpPost httpPost = new HttpPost(url);// 请求地址
+        MultipartEntityBuilder meb = MultipartEntityBuilder.create();
+        ContentType strContent = ContentType.create("application/json", Charset.forName("UTF-8"));
+        if(file.exists()){
+            meb.addBinaryBody("img", file);
+        }
+        params.forEach((k,v)->{
+            meb.addTextBody(k, v, strContent);// 参数
+
+        });
+        org.apache.http.HttpEntity httpEntity = meb.build();
+        httpPost.setEntity(httpEntity);
+        try {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            HttpResponse httpResponse = httpClient.execute(httpPost);
+            InputStream inputStream = httpResponse.getEntity().getContent();
+            BufferedReader br = new BufferedReader(new InputStreamReader(inputStream,"UTF-8"));
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+            result = URLDecoder.decode(sb.toString(),"UTF-8");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        logger.info("upload image res " + result);
+        return  result;
     }
 
 }
