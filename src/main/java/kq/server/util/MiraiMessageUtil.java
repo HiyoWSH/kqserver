@@ -71,6 +71,22 @@ public class MiraiMessageUtil {
         return builder.toString().trim();
     }
 
+    public static String getImage(JSONObject body){
+        StringBuilder builder = new StringBuilder();
+        if(body.containsKey("messageChain")){
+            JSONArray messageChain = body.getJSONArray("messageChain");
+            for (int i = 0; i < messageChain.size(); i++) {
+                JSONObject message = messageChain.getJSONObject(i);
+                if(message.containsKey("type") && "Image".equals(message.getString("type"))
+                        && message.containsKey("imageId")){
+                    return message.getString("imageId");
+                }
+            }
+        }
+
+        return builder.toString().trim();
+    }
+
     public static long getTarget(JSONObject body){
         String type = getType(body);
         switch (type) {

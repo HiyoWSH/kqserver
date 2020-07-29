@@ -24,7 +24,7 @@ public class RandomUtil extends Thread{
 
     public static int getNextInt(int range){
         int ran = random.nextInt(range);
-        logger.info(String.format("RandomUtil.getNextInt %d", ran));
+        logger.debug(String.format("RandomUtil.getNextInt %d", ran));
         return ran;
     }
 

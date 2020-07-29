@@ -47,6 +47,14 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
     long[] setuTarget = new long[]{};
     boolean randomReplyMode = true;
     long[] randomReplyTarget = new long[]{};
+    String[] setuImgids = new String[]{"{762E153B-0264-AF37-002E-D0A1AD0CD004}.mirai", "{C4434875-EDB7-15F5-9EED-1CAB6428641B}.mirai"
+            , "{06A609AD-21AB-EF20-6812-55D331058228}.mirai", "{27186B5D-63CE-9DA0-EB57-C16BE14FFA14}.mirai"
+            , "{F61593B5-5B98-1798-3F47-2A91D32ED2FC}.mirai", "{CB356B43-7D29-B68A-562C-682F3837C4E7}.mirai"};
+    String[] bugouseImgids = new String[]{"{C2680B48-A10B-1A35-62F4-635E5E0C7965}.mirai"};
+
+    long[] dealSetuGroup = {287961148L, 329630396L, 532559793L};
+    long[] dealRdResGroup = {532559793L};
+    long[] dealMenuGroup = {287961148L, 329630396L, 532559793L};
 
     @Autowired MiraiMessageSenderService miraiMessageSenderService;
 
@@ -77,68 +85,36 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
     public String doDeal(JSONObject body) {
 
         try {
-            String command = getText(body);
-            if(StringUtils.isBlank(command)){
-                return "";
-            }
-            User user = getUser(body);
-            JSONObject resjson = new JSONObject();
-            resjson.put("target", getTarget(body));
+
             String commandRes = "";
-            long targetAtId = 0;
-            String mes = Configuation.getMes();
-            long me = Configuation.getMe();
+            String setuRes = "";
+            String menuRes = "";
+            if(inArray(getTarget(body), dealSetuGroup)){
+                setuRes = doSetuDeal(body);
+            }
 
-            if (isAtMe(body, me, mes) && StringUtils.isNotBlank(command)) {
-                command = command.replaceAll(mes,"").trim();
-                if(trpgRunner != null && trpgRunner.isAlive()){
-                    for(User trpgUser:trpgRunner.getUserlist()){
-                        if(trpgUser.getUser_id() == user.getUser_id()){
-                            trpgRunner.getUserOption().get(user.getUser_id()).add(command);
-                            return "";
-                        }
-                    }
-                }
+            if(inArray(getTarget(body), dealMenuGroup)){
+                menuRes = doMenuDeal(body);
+            }
 
-                if(command.contains("TRPG MODE")){
-                    commandRes = getTrpgModeRes(body, user, command);
-                } else {
-                    commandRes = getCommandRes(user, command);
-                }
-                targetAtId = user.getUser_id();
-
-                // 检测成就
-                cardService.checkAchievement(user, body);
-            } else {
-                if(setuMode) {
-                    try {
-                        long target = getTarget(body);
-
-                        if (command.contains("色图") || command.contains("涩图") || command.contains("setu") || command.contains("瑟图")) {
-                            sendSeTu(body);
-                            return "";
-                        }
-                        if (command.contains("不够色") || command.contains("不够涩") || command.contains("不够瑟")) {
-                            sendSeTuH(body);
-                            return "";
-                        }
-                    } catch (Exception e) {
-                        logger.error(e);
-                        commandRes = "涩图，涩图它没有了";
-                    }
-                }
-                if(randomReplyMode) {
-                    if (RandomUtil.getNextInt(100) > 96) {
-                        try {
-                            commandRes = normalService.getTuLingRes(command);
-                        } catch (Exception e) {
-                            logger.warn(e);
-                        }
-                    }
-                }
+            if(StringUtils.isNotBlank(setuRes)){
+                commandRes = setuRes;
+            } else if (StringUtils.isNotBlank(menuRes)) {
+                commandRes = menuRes;
             }
 
             if(StringUtils.isNotBlank(commandRes)) {
+
+                User user = getUser(body);
+                JSONObject resjson = new JSONObject();
+                resjson.put("target", getTarget(body));
+                long targetAtId = 0;
+                String mes = Configuation.getMes();
+                long me = Configuation.getMe();
+                if (isAtMe(body, me, mes)) {
+                    targetAtId = user.getUser_id();
+                }
+
                 resjson.put("messageChain", createMessageTextChain(commandRes));
                 miraiMessageSenderService.sendMessage(getType(body), resjson, targetAtId);
             }
@@ -147,6 +123,90 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
             e.printStackTrace();
         }
         return "";
+    }
+
+    private String doMenuDeal(JSONObject body) {
+        String command = getText(body);
+        User user = getUser(body);
+        JSONObject resjson = new JSONObject();
+        resjson.put("target", getTarget(body));
+        String commandRes = "";
+        String mes = Configuation.getMes();
+        long me = Configuation.getMe();
+
+        if (isAtMe(body, me, mes) && StringUtils.isNotBlank(command)) {
+            command = command.replaceAll(mes,"").trim();
+            if(trpgRunner != null && trpgRunner.isAlive()){
+                for(User trpgUser:trpgRunner.getUserlist()){
+                    if(trpgUser.getUser_id() == user.getUser_id()){
+                        trpgRunner.getUserOption().get(user.getUser_id()).add(command);
+                        return "";
+                    }
+                }
+            }
+            if(command.contains("TRPG MODE")){
+                commandRes = getTrpgModeRes(body, user, command);
+            } else {
+                commandRes = getCommandRes(user, command);
+            }
+            // 检测成就
+            cardService.checkAchievement(user, body);
+        } else {
+            if(randomReplyMode && inArray(getTarget(body), dealRdResGroup)) {
+                if (RandomUtil.getNextInt(100) > 96) {
+                    try {
+                        commandRes = normalService.getTuLingRes(command);
+                    } catch (Exception e) {
+                        logger.warn(e);
+                    }
+                }
+            }
+        }
+        return commandRes;
+    }
+
+    private String doSetuDeal(JSONObject body) {
+        if(setuMode) {
+            String command = getText(body);
+            String imgId = getImage(body);
+            if (inArray(imgId, setuImgids)) {
+                sendSeTu(body);
+            } else if (inArray(imgId, bugouseImgids)) {
+                sendSeTuH(body);
+            } else if (StringUtils.isNotBlank(command)) {
+                try {
+                    if (command.contains("色图") || command.contains("涩图") || command.contains("setu") || command.contains("瑟图")) {
+                        sendSeTu(body);
+                    }
+                    if (command.contains("不够色") || command.contains("不够涩") || command.contains("不够瑟")) {
+                        sendSeTuH(body);
+                        return "";
+                    }
+                } catch (Exception e) {
+                    logger.error(e);
+                    String commandRes = "涩图，涩图它没有了";
+                    return commandRes;
+                }
+            }
+        }
+        return "";
+    }
+
+    private boolean inArray(String imgId, String[] strs) {
+        for (String s:strs){
+            if(StringUtils.equalsIgnoreCase(imgId, s)){
+                return true;
+            }
+        }
+        return false;
+    }
+    private boolean inArray(long id, long[] ids) {
+        for (long i:ids){
+            if(i == id){
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getTrpgModeRes(JSONObject body, User user, String command) {
