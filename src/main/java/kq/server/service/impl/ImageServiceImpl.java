@@ -1,5 +1,6 @@
 package kq.server.service.impl;
 
+import kq.server.config.Configuation;
 import kq.server.service.ImageService;
 import org.springframework.stereotype.Service;
 
@@ -14,20 +15,11 @@ import static kq.server.util.RandomUtil.getNextInt;
 public class ImageServiceImpl implements ImageService {
 
     private static List imgIndex;
-    private static String imgDir = "F:\\setudir\\localsetu";//""C:\\Users\\wangsh\\Pictures\\二次图";
-
-    public static void main(String argv[]) {
-        ImageServiceImpl impl = new ImageServiceImpl();
-        impl.initImageCache();
-        String path = "file:///yori/localsetu" + impl.getImage().substring(20).replaceAll("\\\\", "/");//linux用
-        System.out.println(path);
-    }
-
 
     @Override
     public void initImageCache() {
         long start = System.currentTimeMillis();
-        File f = new File(imgDir);
+        File f = new File(Configuation.getSetudir());
         imgIndex = getImages(f);
         logger.info("initStoryCache end " + (System.currentTimeMillis()-start) + "ms");
     }

@@ -37,24 +37,19 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
 
     private static Logger logger = Logger.getLogger(MiraiMessageHandlerServiceImpl.class);
 
-    String localFromNet = "F:\\setudir\\localsetu\\fromNet";
-    String setuFormNetR18 = "F:\\setudir\\fromNetR18";
-//    String setuFormNet = "F:\\setudir\\fromNet";
-//    String localFromNet = "/yori/kqserver/setu/local";
-//    String setuFormNetR18 = "/yori/kqserver/setu/r18";
-//    String setuFormNet = "/yori/kqserver/setu/local";
     boolean setuMode = true;
-    long[] setuTarget = new long[]{};
+    boolean menuReplyMode = false;
     boolean randomReplyMode = true;
-    long[] randomReplyTarget = new long[]{};
-    String[] setuImgids = new String[]{"{762E153B-0264-AF37-002E-D0A1AD0CD004}.mirai", "{C4434875-EDB7-15F5-9EED-1CAB6428641B}.mirai"
-            , "{06A609AD-21AB-EF20-6812-55D331058228}.mirai", "{27186B5D-63CE-9DA0-EB57-C16BE14FFA14}.mirai"
-            , "{F61593B5-5B98-1798-3F47-2A91D32ED2FC}.mirai", "{CB356B43-7D29-B68A-562C-682F3837C4E7}.mirai"};
+    String[] setuImgids = new String[]{"{762E153B-0264-AF37-002E-D0A1AD0CD004}.mirai", "{C4434875-EDB7-15F5-9EED-1CAB6428641B}.mirai",
+            "{06A609AD-21AB-EF20-6812-55D331058228}.mirai", "{27186B5D-63CE-9DA0-EB57-C16BE14FFA14}.mirai",
+            "{F61593B5-5B98-1798-3F47-2A91D32ED2FC}.mirai", "{CB356B43-7D29-B68A-562C-682F3837C4E7}.mirai",
+            "{63349CBC-C4D6-BA75-D48F-EC7EA3B90C7B}.mirai"};
     String[] bugouseImgids = new String[]{"{C2680B48-A10B-1A35-62F4-635E5E0C7965}.mirai"};
 
-    long[] dealSetuGroup = {287961148L, 329630396L, 532559793L};
+    long[] dealSetuGroup = {287961148L, 329630396L, 532559793L, 367896221L};
     long[] dealRdResGroup = {532559793L};
-    long[] dealMenuGroup = {287961148L, 329630396L, 532559793L};
+    long[] dealMenuGroup = {287961148L, 329630396L, 532559793L, 367896221L};
+    long[] dealPcrGroup = {287961148L};
 
     @Autowired MiraiMessageSenderService miraiMessageSenderService;
 
@@ -253,7 +248,7 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
             logger.info("image source 2");
             String randomImgRes = getRandomImageFromRemote1();
             try{
-                randomImgRes = DownloadURLFile.downloadFromUrl(randomImgRes, localFromNet);
+                randomImgRes = DownloadURLFile.downloadFromUrl(randomImgRes, Configuation.setudir);
             } catch (Exception e){
                 logger.error(e);
                 e.printStackTrace();
@@ -271,7 +266,7 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
     private void sendSeTuH(JSONObject body){
         String randomImgRes = getRandomImageFromRemote2();
         try{
-            randomImgRes = DownloadURLFile.downloadImgByNet(randomImgRes, setuFormNetR18, String.valueOf(System.currentTimeMillis()) + ".jpg");
+            randomImgRes = DownloadURLFile.downloadImgByNet(randomImgRes, Configuation.setudir18, String.valueOf(System.currentTimeMillis()) + ".jpg");
         } catch (Exception e){
             logger.error(e);
             e.printStackTrace();
@@ -355,26 +350,34 @@ public class MiraiMessageHandlerServiceImpl implements MiraiMessageHandlerServic
     }
 
     private String getCommandRes(User user, String command) {
-        if(command.startsWith("功能") || command.startsWith("菜单") || command.startsWith("help") || command.startsWith("帮助")){
-            return normalService.doDealMenu();
-        } else if(command.contains("抽签")){
-            return chouqianService.getChouqianRes(user);
-        } else if(command.contains("抽卡")){
-            return cardService.doDealChouka(user,command);
-        } else if(command.contains("查看卡牌") || command.contains("查看卡片")){
-            return cardService.doShowCard(user, command);
-        } else if(command.contains("卡牌商店")){
-            return cardService.doShowCardShop(user);
-        } else if(command.contains("交换卡牌")){
-            return cardService.doCardExchange(user, command);
-        } else if(command.contains("查看成就")){
-            return achievementService.doShowAchievement(user, command);
-        } else if(command.contains("听故事") || command.contains("讲故事")) {
-            return storyService.doDealStory(command);
-        } else if(command.contains("资料")){
-            return userService.showUserInfo(user);
+        if(menuReplyMode) {
+            if (command.startsWith("功能") || command.startsWith("菜单") || command.startsWith("help") || command.startsWith("帮助")) {
+                return normalService.doDealMenu();
+            } else if (command.contains("抽签")) {
+                return chouqianService.getChouqianRes(user);
+            } else if (command.contains("抽卡")) {
+                return cardService.doDealChouka(user, command);
+            } else if (command.contains("查看卡牌") || command.contains("查看卡片")) {
+                return cardService.doShowCard(user, command);
+            } else if (command.contains("卡牌商店")) {
+                return cardService.doShowCardShop(user);
+            } else if (command.contains("交换卡牌")) {
+                return cardService.doCardExchange(user, command);
+            } else if (command.contains("查看成就")) {
+                return achievementService.doShowAchievement(user, command);
+            } else if (command.contains("听故事") || command.contains("讲故事")) {
+                return storyService.doDealStory(command);
+            } else if (command.contains("资料")) {
+                return userService.showUserInfo(user);
+            } else {
+                return normalService.getNormalResStr(user, command);
+            }
         } else {
-            return normalService.getNormalResStr(user,command);
+            try {
+                return normalService.getTuLingRes(command);
+            } catch (Exception e) {
+                return "";
+            }
         }
     }
 

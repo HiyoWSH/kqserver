@@ -13,6 +13,9 @@ public class Configuation {
     public static String miraiserver;
     public static String authKey;
     public static String groovyPath;
+    public static String storydir;
+    public static String setudir;
+    public static String setudir18;
 
     public static String getRunMode() {
         return runMode;
@@ -60,5 +63,29 @@ public class Configuation {
 
     public static void setGroovyPath(String groovyPath) {
         Configuation.groovyPath = groovyPath;
+    }
+
+    public static String getStorydir() {
+        return storydir;
+    }
+
+    public static void setStorydir(String storydir) {
+        Configuation.storydir = storydir;
+    }
+
+    public static String getSetudir() {
+        return setudir;
+    }
+
+    public static void setSetudir(String setudir) {
+        Configuation.setudir = setudir;
+    }
+
+    public static String getSetudir18() {
+        return setudir18;
+    }
+
+    public static void setSetudir18(String setudir18) {
+        Configuation.setudir18 = setudir18;
     }
 }

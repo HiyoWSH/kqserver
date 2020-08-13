@@ -28,5 +28,7 @@ kqserver:
   mes: "@栗小栗"
   miraiserver: http://127.0.0.1:8080
   authKey: 1234567890
+  groovyPath: .;/bin/groovy/;H:\kqserver-runner\plugin\;H:/eclipse project/kqServer/src/main/java/kq/server/groovy/
   storydir:
-  setudir:
+  setudir: F:/setudir/localsetu/fromNet
+  setudir18: F:/setudir/fromNetR18
